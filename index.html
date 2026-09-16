@@ -627,9 +627,9 @@ const micBtn = $('#mic');
 let rec = null, listening = false, fromVoice = false;
 const unlockTTS = () => { if ('speechSynthesis' in window) speechSynthesis.speak(new SpeechSynthesisUtterance('')); };
 if (!SR) micBtn.hidden = true;
-micBtn.onclick = () => {
-  if (listening) { rec.stop(); return; }
-  if (busy) return;
+micBtn.onclick = () => { if (listening) rec.stop(); else startMic(); };
+function startMic(greeting){
+  if (listening || busy) return;
   micBusy = true; stopWake(); chirpInit();
   if ('speechSynthesis' in window) speechSynthesis.cancel();
   unlockTTS();
@@ -640,7 +640,7 @@ micBtn.onclick = () => {
   rec.onstart = () => {
     listening = true;
     micBtn.classList.add('on'); micBtn.setAttribute('aria-pressed', 'true');
-    eyes.set('listening'); status('Listening');
+    eyes.set('listening'); status(greeting || 'Listening');
   };
   rec.onresult = e => {
     let text = '';
@@ -661,7 +661,7 @@ micBtn.onclick = () => {
     else resumeWake();
   };
   try { rec.start(); } catch (err) { micBusy = false; status('Mic error: ' + (err.message || err)); resumeWake(); }
-};
+}
 
 /* ---------- Wake word ---------- */
 const WAKE = /(?:hey|hi|hay|okay|ok|yo)[\s,.!]*(?:blink|blinks|blank|bling|plink|link|blinky)\b|เฮ้\s*(?:บลิ้ง|บลิงค์|บลิ๊ง|บลิงก์)/i;
@@ -706,38 +706,16 @@ function startWake(){
   r.lang = navigator.language || 'en-US';
   r.continuous = true;
   r.interimResults = true;
-  let armed = false, armTimer = 0;
-  const disarm = () => {
-    armed = false; clearTimeout(armTimer);
-    if (eyes.state === 'listening') eyes.set(ready() ? 'idle' : 'sleep');
-    qEl.value = ''; autosize(); updateSend();
-    status(ready() ? 'Awake. Ask me anything.' : 'Say “Hey Blink” after waking me up.');
-  };
   r.onstart = () => { earEl.hidden = false; wakeFails = 0; };
   r.onresult = e => {
+    if (busy || speaking) return;
     for (let i = e.resultIndex; i < e.results.length; i++) {
-      const res = e.results[i];
-      let t = res[0].transcript;
-      const m = t.match(WAKE);
-      if (busy || speaking) return;
-      if (!armed) {
-        if (!m) continue;
-        armed = true;
-        chirp(); eyes.set('listening'); eyes.pop();
-        status(WAKE_LINES[Math.floor(Math.random() * WAKE_LINES.length)]);
-      }
-      if (m) t = t.slice(m.index + m[0].length);
-      t = t.replace(/^[\s,.!?]+/, '').trim();
-      clearTimeout(armTimer);
-      armTimer = setTimeout(disarm, 8000);
-      if (t) { qEl.value = t; autosize(); updateSend(); }
-      if (res.isFinal && t) {
-        clearTimeout(armTimer);
-        stopWake();
-        if (eyes.state === 'listening') eyes.set('idle');
-        submitVoice();
-        return;
-      }
+      if (!WAKE.test(e.results[i][0].transcript)) continue;
+      stopWake();
+      chirpInit(); chirp(); eyes.pop();
+      const line = WAKE_LINES[Math.floor(Math.random() * WAKE_LINES.length)];
+      setTimeout(() => startMic(line), 350);
+      return;
     }
   };
   r.onerror = e => {
@@ -748,8 +726,6 @@ function startWake(){
   };
   r.onend = () => {
     wakeRec = null; earEl.hidden = true;
-    clearTimeout(armTimer);
-    if (armed && eyes.state === 'listening') eyes.set(ready() ? 'idle' : 'sleep');
     if (wakeFails > 5) { status('“Hey Blink” keeps stopping. Tap the mic instead.'); return; }
     setTimeout(startWake, 300 + wakeFails * 1000);
   };
