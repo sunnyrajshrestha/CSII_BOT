@@ -42,6 +42,8 @@ button,select,textarea{font:inherit;color:inherit}
 .status{position:absolute;left:18px;right:18px;bottom:16px;margin:0;color:#BFD9E8;font-size:14px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bar{position:absolute;left:0;bottom:0;height:4px;width:0;background:var(--pink);transition:width .2s}
 .wake{position:absolute;bottom:44px;border:0;border-radius:999px;padding:10px 20px;background:var(--glow);color:var(--screen);font-weight:700;cursor:pointer}
+.ear{position:absolute;top:14px;right:18px;margin:0;padding:3px 10px;border-radius:999px;background:#FF5FA233;color:#FFB3D2;font-size:13px}
+.ear[hidden]{display:none}
 .name{position:absolute;top:16px;left:22px;margin:0;font:600 15px/1 Unbounded,system-ui,sans-serif;color:#5C6BA8;letter-spacing:.02em}
 
 /* Chat */
@@ -85,6 +87,7 @@ summary{cursor:pointer;padding:4px 0;width:max-content}
 <div class="app">
   <section class="face" id="face" data-state="sleep" aria-label="Blink">
     <p class="name">Blink</p>
+    <p class="ear" id="ear" hidden>Say “Hey Blink”</p>
     <div class="eyes" id="eyes"><div class="eye l"></div><div class="eye r"></div></div>
     <button class="wake" id="wake">Wake Blink</button>
     <p class="status" id="status" role="status">Asleep. The first wake-up downloads the model once.</p>
@@ -120,6 +123,8 @@ summary{cursor:pointer;padding:4px 0;width:max-content}
         <label id="pcModelRow" hidden>PC model <input id="pcModel" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
         <button class="link" id="connect" hidden>Connect to PC</button>
         <label>Speak answers <input type="checkbox" id="speak"></label>
+        <label>Wake word “Hey Blink” <input type="checkbox" id="wake-word"></label>
+        <label>Funny personality <input type="checkbox" id="fun"></label>
         <button class="link" id="clear">Clear chat</button>
         <p class="diag" id="diag">Checking this phone…</p>
       </div>
@@ -272,11 +277,16 @@ async function connectPC(){
       status(`Connected to your PC · ${pcModel}`);
       eyes.flash('happy', 1200);
     }
-  } catch {
+  } catch (e) {
     eyes.set('sad'); wakeBtn.hidden = false;
-    status('Cannot reach your PC. Check Ollama, the tunnel, OLLAMA_ORIGINS and the link.');
+    const why = /HTTP 403/.test(e.message) ? 'blocked by OLLAMA_ORIGINS'
+              : /HTTP 5\d\d/.test(e.message) ? 'tunnel cannot reach Ollama'
+              : e.name === 'TimeoutError' ? 'timed out'
+              : 'no response (' + e.message + ')';
+    status('Cannot reach your PC: ' + why + '.');
   }
   busy = false; updateSend();
+  resumeWake();
 }
 
 async function* pcStream(messages){
@@ -374,6 +384,7 @@ async function wake(){
     wakeBtn.hidden = false;
   }
   busy = false; loading = false; updateSend();
+  resumeWake();
 }
 wakeBtn.onclick = wake;
 modelSel.onchange = () => { if (engine) wake(); };
@@ -507,8 +518,12 @@ function renderFiles(){
 }
 
 /* ---------- Chat ---------- */
-const SYS_DOCS = 'You are Blink, a small offline assistant on a phone. If the file excerpts the user provides answer the question, answer from them and mention the source name in square brackets. If they do not, ignore the excerpts and answer from your general knowledge, starting with "(general knowledge)". Be short and clear. Always give a real answer.';
-const SYS_CHAT = 'You are Blink, a friendly offline assistant on a phone. Answer every question directly in 1 to 3 sentences using your general knowledge. Always give a real answer.';
+const FUN = 'Personality: you are Blink, a tiny, overly dramatic robot with two big glowing eyes who lives in a maker lab. You adore 3D printers, are secretly scared of the laser cutter, think you are a genius, and refer to humans as "my favorite carbon-based friends". Add one short quirky, funny remark to each answer, then give the real answer. Jokes must never replace or change the facts. Your replies are read aloud, so use plain sentences with no emojis, lists or markdown. ';
+const PLAIN = 'You are Blink, a friendly assistant on a phone. Your replies may be read aloud, so avoid emojis and markdown. ';
+const SYS_DOCS_TASK = 'If the file excerpts the user provides answer the question, answer from them and mention the source name in square brackets. If they do not, ignore the excerpts and answer from your general knowledge, starting with "(general knowledge)". Be short and clear. Always give a real answer.';
+const SYS_CHAT_TASK = 'Answer every question directly in 1 to 3 sentences using your general knowledge. Always give a real answer.';
+const funBox = $('#fun');
+const sysPrompt = docs => (funBox.checked ? FUN : PLAIN) + (docs ? SYS_DOCS_TASK : SYS_CHAT_TASK);
 let history = [];
 const NOPE = /not sure|don't know|do not know|can't help|cannot help/i;
 
@@ -546,7 +561,7 @@ async function ask(){
   eyes.set('thinking'); status('Thinking');
 
   const messages = [
-    { role: 'system', content: chunks.length ? SYS_DOCS : SYS_CHAT },
+    { role: 'system', content: sysPrompt(chunks.length > 0) },
     ...history.filter(m => !(m.role === 'assistant' && NOPE.test(m.content))).slice(-4),
     { role: 'user', content: ctx ? `Excerpts from my files:\n\n${ctx}\n\nQuestion: ${q}` : q }
   ];
@@ -567,6 +582,7 @@ async function ask(){
     bubble.textContent = 'Something went wrong: ' + (e.message || e);
     eyes.flash('sad', 2000); status(mode === 'pc' ? 'Check that the PC and tunnel are still running.' : 'Try again, or pick a lighter model in Settings.');
     history.pop(); busy = false; updateSend();
+    resumeWake();
     return;
   }
 
@@ -587,13 +603,21 @@ async function ask(){
   else eyes.flash('happy', 900);
 }
 
+let speaking = false;
 function say(text){
-  const u = new SpeechSynthesisUtterance(text);
+  stopWake();
+  speaking = true;
+  const u = new SpeechSynthesisUtterance(text.replace(/\[[^\]]*\]/g, ''));
   if (/[\u0E00-\u0E7F]/.test(text)) u.lang = 'th-TH';
   u.rate = 1.05;
+  u.pitch = funBox.checked ? 1.35 : 1;
   u.onstart = () => eyes.set('talking');
   u.onboundary = () => eyes.pop();
-  u.onend = u.onerror = () => { if (eyes.state === 'talking') eyes.flash('happy', 800); };
+  u.onend = u.onerror = () => {
+    speaking = false;
+    if (eyes.state === 'talking') eyes.flash('happy', 800);
+    resumeWake();
+  };
   speechSynthesis.speak(u);
 }
 
@@ -606,6 +630,7 @@ if (!SR) micBtn.hidden = true;
 micBtn.onclick = () => {
   if (listening) { rec.stop(); return; }
   if (busy) return;
+  micBusy = true; stopWake(); chirpInit();
   if ('speechSynthesis' in window) speechSynthesis.cancel();
   unlockTTS();
   rec = new SR();
@@ -631,10 +656,116 @@ micBtn.onclick = () => {
     listening = false;
     micBtn.classList.remove('on'); micBtn.setAttribute('aria-pressed', 'false');
     if (eyes.state === 'listening') eyes.set(ready() ? 'idle' : 'sleep');
-    if (qEl.value.trim()) { fromVoice = true; ask(); }
+    micBusy = false;
+    if (qEl.value.trim()) submitVoice();
+    else resumeWake();
   };
-  try { rec.start(); } catch (err) { status('Mic error: ' + (err.message || err)); }
+  try { rec.start(); } catch (err) { micBusy = false; status('Mic error: ' + (err.message || err)); resumeWake(); }
 };
+
+/* ---------- Wake word ---------- */
+const WAKE = /(?:hey|hi|hay|okay|ok|yo)[\s,.!]*(?:blink|blinks|blank|bling|plink|link|blinky)\b|เฮ้\s*(?:บลิ้ง|บลิงค์|บลิ๊ง|บลิงก์)/i;
+const WAKE_LINES = ['Ears on!', 'You rang?', 'Blink is listening. Dramatically.', 'Yes, my favorite carbon-based friend?', 'Beep boop, go!'];
+const wakeBox = $('#wake-word'), earEl = $('#ear');
+let wakeRec = null, micBusy = false, wakeFails = 0, audioCtx = null;
+
+function chirpInit(){ try { audioCtx ||= new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch {} }
+function chirp(){
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  [880, 1320].forEach((f, i) => {
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.frequency.value = f; o.type = 'sine';
+    g.gain.setValueAtTime(0.0001, t + i * 0.09);
+    g.gain.exponentialRampToValueAtTime(0.25, t + i * 0.09 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.09 + 0.08);
+    o.connect(g).connect(audioCtx.destination);
+    o.start(t + i * 0.09); o.stop(t + i * 0.09 + 0.1);
+  });
+}
+const wakeAllowed = () => SR && wakeBox.checked && !busy && !micBusy && !listening && !speaking && document.visibilityState === 'visible';
+
+function stopWake(){
+  if (!wakeRec) return;
+  const r = wakeRec; wakeRec = null;
+  r.onend = r.onresult = r.onerror = null;
+  try { r.abort(); } catch {}
+  earEl.hidden = true;
+}
+function resumeWake(){ setTimeout(startWake, 500); }
+
+function submitVoice(){
+  fromVoice = true;
+  ask().finally(() => { if (!speaking) resumeWake(); });
+}
+
+function startWake(){
+  if (wakeRec || !wakeAllowed()) return;
+  const r = new SR();
+  wakeRec = r;
+  r.lang = navigator.language || 'en-US';
+  r.continuous = true;
+  r.interimResults = true;
+  let armed = false, armTimer = 0;
+  const disarm = () => {
+    armed = false; clearTimeout(armTimer);
+    if (eyes.state === 'listening') eyes.set(ready() ? 'idle' : 'sleep');
+    qEl.value = ''; autosize(); updateSend();
+    status(ready() ? 'Awake. Ask me anything.' : 'Say “Hey Blink” after waking me up.');
+  };
+  r.onstart = () => { earEl.hidden = false; wakeFails = 0; };
+  r.onresult = e => {
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const res = e.results[i];
+      let t = res[0].transcript;
+      const m = t.match(WAKE);
+      if (busy || speaking) return;
+      if (!armed) {
+        if (!m) continue;
+        armed = true;
+        chirp(); eyes.set('listening'); eyes.pop();
+        status(WAKE_LINES[Math.floor(Math.random() * WAKE_LINES.length)]);
+      }
+      if (m) t = t.slice(m.index + m[0].length);
+      t = t.replace(/^[\s,.!?]+/, '').trim();
+      clearTimeout(armTimer);
+      armTimer = setTimeout(disarm, 8000);
+      if (t) { qEl.value = t; autosize(); updateSend(); }
+      if (res.isFinal && t) {
+        clearTimeout(armTimer);
+        stopWake();
+        if (eyes.state === 'listening') eyes.set('idle');
+        submitVoice();
+        return;
+      }
+    }
+  };
+  r.onerror = e => {
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      wakeBox.checked = false; store.set('blink-wake', '0');
+      status('Microphone blocked. Allow it in your browser settings to use “Hey Blink”.');
+    } else if (e.error !== 'no-speech' && e.error !== 'aborted') wakeFails++;
+  };
+  r.onend = () => {
+    wakeRec = null; earEl.hidden = true;
+    clearTimeout(armTimer);
+    if (armed && eyes.state === 'listening') eyes.set(ready() ? 'idle' : 'sleep');
+    if (wakeFails > 5) { status('“Hey Blink” keeps stopping. Tap the mic instead.'); return; }
+    setTimeout(startWake, 300 + wakeFails * 1000);
+  };
+  try { r.start(); } catch { wakeRec = null; }
+}
+
+wakeBox.checked = store.get('blink-wake') === '1';
+if (!SR) wakeBox.closest('label').hidden = true;
+wakeBox.onchange = () => {
+  store.set('blink-wake', wakeBox.checked ? '1' : '0');
+  if (wakeBox.checked) { chirpInit(); unlockTTS(); wakeFails = 0; startWake(); }
+  else stopWake();
+};
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') resumeWake(); else stopWake(); });
+funBox.checked = store.get('blink-fun') !== '0';
+funBox.onchange = () => store.set('blink-fun', funBox.checked ? '1' : '0');
 
 function autosize(){ qEl.style.height = 'auto'; qEl.style.height = Math.min(qEl.scrollHeight, 140) + 'px'; }
 qEl.addEventListener('input', () => { autosize(); updateSend(); });
@@ -676,6 +807,7 @@ $('#connect').onclick = () => {
 
 eyes.set('sleep');
 setupModels();
+resumeWake();
 </script>
 </body>
 </html>
