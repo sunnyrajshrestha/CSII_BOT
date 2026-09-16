@@ -72,7 +72,10 @@ summary{cursor:pointer;padding:4px 0;width:max-content}
 .opts{display:grid;gap:10px;padding:8px 0 4px}
 .opts label{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--ink)}
 .opts select{max-width:62%;padding:6px 8px;border-radius:10px;border:1px solid var(--line);background:var(--bubble)}
-.opts input{width:20px;height:20px;accent-color:var(--pink)}
+.opts input[type=checkbox]{width:20px;height:20px;accent-color:var(--pink)}
+.opts input[type=url],.opts input[type=text]{width:62%;padding:6px 8px;border-radius:10px;border:1px solid var(--line);background:var(--bubble);font-size:16px}
+.opts [hidden]{display:none}
+.diag{margin:0;font-size:13px;white-space:pre-line;color:var(--muted)}
 .link{border:0;background:none;padding:0;color:var(--pink);cursor:pointer;justify-self:start}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (prefers-reduced-motion:reduce){.eyes,.eye,.bar{transition:none}.mic.on{animation:none}}
@@ -111,9 +114,14 @@ summary{cursor:pointer;padding:4px 0;width:max-content}
     <details>
       <summary>Settings</summary>
       <div class="opts">
-        <label>Model <select id="model"></select></label>
+        <label>Run on <select id="mode"><option value="phone">This phone</option><option value="pc">My PC (Ollama)</option></select></label>
+        <label id="phoneModel">Model <select id="model"></select></label>
+        <label id="pcUrlRow" hidden>PC link <input id="pcUrl" type="url" placeholder="https://….trycloudflare.com" autocomplete="off"></label>
+        <label id="pcModelRow" hidden>PC model <input id="pcModel" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+        <button class="link" id="connect" hidden>Connect to PC</button>
         <label>Speak answers <input type="checkbox" id="speak"></label>
         <button class="link" id="clear">Clear chat</button>
+        <p class="diag" id="diag">Checking this phone…</p>
       </div>
     </details>
   </footer>
@@ -196,19 +204,40 @@ const CHOICES = [
   ['Qwen2.5-1.5B-Instruct', 'Qwen2.5 1.5B'],
   ['Qwen3-1.7B', 'Qwen3 1.7B (best answers)']
 ];
-let engine = null, loadedId = null, busy = false;
+let engine = null, loadedId = null, busy = false, loading = false, loadErr = '';
+let mode = store.get('blink-mode') === 'pc' ? 'pc' : 'phone';
+let pcUrl = store.get('blink-pc-url') || '', pcModel = store.get('blink-pc-model') || 'qwen3:14b', pcReady = false;
+const ready = () => mode === 'pc' ? pcReady : !!engine;
+addEventListener('unhandledrejection', e => { if (loading) loadErr = 'Error: ' + (e.reason?.message || e.reason); });
+addEventListener('error', e => { if (loading) loadErr = 'Error: ' + e.message; });
+const cacheBackend = store.get('blink-cache') === 'indexeddb' ? 'indexeddb' : 'cache';
 
 async function setupModels(){
+  if (mode === 'pc' && pcUrl) wake();
   try { webllm = await import(WEBLLM); }
   catch {
+    if (mode === 'pc') return;
     eyes.set('sad'); wakeBtn.hidden = true;
     status('AI engine did not load. Open this page from an https:// link with internet on.');
     return;
   }
-  let f16 = false;
+  let f16 = false, a = null;
   if (navigator.gpu) {
-    try { const a = await navigator.gpu.requestAdapter(); f16 = !!a?.features.has('shader-f16'); } catch {}
+    try { a = await navigator.gpu.requestAdapter(); f16 = !!a?.features.has('shader-f16'); } catch {}
   }
+  const d = [];
+  const mb = n => Math.round(n / 1048576) + ' MB';
+  if (!navigator.gpu) d.push('GPU: no WebGPU');
+  else if (!a) d.push('GPU: WebGPU on, but no GPU adapter');
+  else {
+    d.push('GPU: ' + ([a.info?.vendor, a.info?.architecture, a.info?.description].filter(Boolean).join(' ') || 'unknown'));
+    d.push('f16: ' + (f16 ? 'yes' : 'no'));
+    d.push('Max buffer: ' + mb(a.limits.maxBufferSize) + ' · max storage binding: ' + mb(a.limits.maxStorageBufferBindingSize));
+  }
+  try { const e = await navigator.storage.estimate(); d.push('Storage free: ' + mb(e.quota - e.usage)); } catch {}
+  d.push('RAM: ' + (navigator.deviceMemory ? navigator.deviceMemory + ' GB' : 'unknown') + ' · cache: ' + cacheBackend);
+  d.push(navigator.userAgent);
+  $('#diag').textContent = d.join('\n');
   const quant = f16 ? 'q4f16_1' : 'q4f32_1';
   const list = webllm.prebuiltAppConfig.model_list;
   for (const [base, label] of CHOICES) {
@@ -219,39 +248,132 @@ async function setupModels(){
     modelSel.add(o);
   }
   const saved = store.get('blink-model');
-  if (saved && [...modelSel.options].some(o => o.value === saved)) {
+  if (mode === 'phone' && saved && [...modelSel.options].some(o => o.value === saved)) {
     modelSel.value = saved;
     wake();
   }
 }
 
+async function connectPC(){
+  if (!pcUrl) { status('Enter your PC link in Settings, then tap Connect to PC.'); document.querySelector('details').open = true; return; }
+  busy = true; updateSend();
+  wakeBtn.hidden = true;
+  eyes.set('loading'); status('Connecting to your PC');
+  try {
+    const r = await fetch(pcUrl + '/api/tags', { signal: AbortSignal.timeout(10000) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const names = ((await r.json()).models || []).map(m => m.name);
+    const want = pcModel.includes(':') ? pcModel : pcModel + ':latest';
+    if (!names.includes(want)) {
+      eyes.set('sad'); wakeBtn.hidden = false;
+      status(`${pcModel} is not on the PC. Run: ollama pull ${pcModel}`);
+    } else {
+      pcReady = true;
+      status(`Connected to your PC · ${pcModel}`);
+      eyes.flash('happy', 1200);
+    }
+  } catch {
+    eyes.set('sad'); wakeBtn.hidden = false;
+    status('Cannot reach your PC. Check Ollama, the tunnel, OLLAMA_ORIGINS and the link.');
+  }
+  busy = false; updateSend();
+}
+
+async function* pcStream(messages){
+  const body = { model: pcModel, messages, stream: true, think: false,
+    options: { temperature: 0.7, top_p: 0.8, presence_penalty: 0.5, num_predict: 512 } };
+  const post = () => fetch(pcUrl + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  let res = await post();
+  if (!res.ok) {
+    const t = await res.text();
+    if (!/think/i.test(t)) throw new Error(t || 'HTTP ' + res.status);
+    delete body.think;
+    res = await post();
+    if (!res.ok) throw new Error((await res.text()) || 'HTTP ' + res.status);
+  }
+  const reader = res.body.getReader(), dec = new TextDecoder();
+  let buf = '';
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let i;
+    while ((i = buf.indexOf('\n')) >= 0) {
+      const line = buf.slice(0, i).trim();
+      buf = buf.slice(i + 1);
+      if (!line) continue;
+      const j = JSON.parse(line);
+      if (j.error) throw new Error(j.error);
+      if (j.message?.content) yield j.message.content;
+    }
+  }
+}
+
+async function* chatStream(messages){
+  if (mode === 'pc') { yield* pcStream(messages); return; }
+  const stream = await engine.chat.completions.create({
+    messages, stream: true, temperature: 0.7, top_p: 0.8, presence_penalty: 0.5, max_tokens: 512,
+    extra_body: { enable_thinking: false }
+  });
+  for await (const ch of stream) {
+    const d = ch.choices[0]?.delta?.content || '';
+    if (d) yield d;
+  }
+}
+
 async function wake(){
-  if (busy || !webllm) return;
+  if (busy) return;
+  if (mode === 'pc') return connectPC();
+  if (!webllm) return;
   if (!navigator.gpu) {
     eyes.set('sad');
     status('No WebGPU here. Use recent Chrome on Android or Safari on iOS 26+, over HTTPS.');
     return;
   }
-  busy = true; updateSend();
+  busy = true; loading = true; updateSend();
   wakeBtn.hidden = true;
   eyes.set('loading');
   const id = modelSel.value;
+  const t0 = Date.now();
+  let last = t0, label = 'Downloading model 0%';
+  loadErr = '';
+  const tick = setInterval(() => {
+    status(`${label} · ${Math.round((Date.now() - t0) / 1000)}s · keep this screen open`);
+    if (loadErr || Date.now() - last > 180000) {
+      clearInterval(tick);
+      eyes.set('sad');
+      status(loadErr || 'Download looks stuck. Tap Try again.');
+      wakeBtn.textContent = 'Try again';
+      wakeBtn.onclick = () => { store.set('blink-cache', cacheBackend === 'cache' ? 'indexeddb' : 'cache'); location.reload(); };
+      wakeBtn.hidden = false;
+    }
+  }, 1000);
   try {
-    const onProg = r => { status(r.text); bar.style.width = (r.progress * 100).toFixed(1) + '%'; };
-    if (!engine) engine = await webllm.CreateMLCEngine(id, { initProgressCallback: onProg });
+    const onProg = r => {
+      last = Date.now();
+      label = r.progress < 1 ? `Downloading model ${Math.round(r.progress * 100)}%` : 'Preparing on GPU';
+      bar.style.width = (r.progress * 100).toFixed(1) + '%';
+    };
+    if (!engine) engine = await webllm.CreateMLCEngine(id, {
+      appConfig: { ...webllm.prebuiltAppConfig, cacheBackend },
+      initProgressCallback: onProg
+    });
     else await engine.reload(id);
+    clearInterval(tick);
+    wakeBtn.hidden = true; wakeBtn.textContent = 'Wake Blink'; wakeBtn.onclick = wake;
     loadedId = id;
     store.set('blink-model', id);
     bar.style.width = '0';
     status('Awake. Ask me anything.');
     eyes.flash('happy', 1200);
   } catch (e) {
+    clearInterval(tick);
     bar.style.width = '0';
     eyes.set('sad');
     status('Model failed to load: ' + (e.message || e));
     wakeBtn.hidden = false;
   }
-  busy = false; updateSend();
+  busy = false; loading = false; updateSend();
 }
 wakeBtn.onclick = wake;
 modelSel.onchange = () => { if (engine) wake(); };
@@ -368,7 +490,7 @@ $('#picker').onchange = async e => {
   rebuild(); renderFiles();
   if (ok) { status(`Read ${ok} file${ok > 1 ? 's' : ''}. Ask away.`); eyes.flash('happy', 1000); }
   else eyes.flash('sad', 1500);
-  if (prev === 'sleep' && !engine) setTimeout(() => { if (!engine && eyes.state === 'idle') eyes.set('sleep'); }, 1100);
+  if (prev === 'sleep' && !ready()) setTimeout(() => { if (!ready() && eyes.state === 'idle') eyes.set('sleep'); }, 1100);
 };
 
 function renderFiles(){
@@ -401,13 +523,14 @@ function addMsg(who, text){
 }
 const clean = s => s.replace(/<think>[\s\S]*?(<\/think>|$)/g, '').replace(/\*\*/g, '').trim();
 
-function updateSend(){ sendBtn.disabled = busy || !qEl.value.trim(); }
+function updateSend(){ sendBtn.disabled = !qEl.value.trim() || (busy && !loading); }
 
 async function ask(){
   const spoken = fromVoice; fromVoice = false;
   const q = qEl.value.trim();
+  if (q && loading) { status('Still downloading the model. Send again when the eyes wake up.'); eyes.blink(); return; }
   if (!q || busy) return;
-  if (!engine) { status('Wake Blink first.'); eyes.blink(); wakeBtn.focus(); return; }
+  if (!ready()) { status(mode === 'pc' ? 'Connect to your PC first.' : 'Wake Blink first.'); eyes.blink(); wakeBtn.focus(); return; }
   busy = true; qEl.value = ''; autosize(); updateSend();
   speechSynthesis?.cancel();
   addMsg('me', q);
@@ -432,14 +555,8 @@ async function ask(){
   const bubble = addMsg('bot', '');
   let out = '';
   try {
-    const stream = await engine.chat.completions.create({
-      messages, stream: true, temperature: 0.7, top_p: 0.8, presence_penalty: 0.5, max_tokens: 512,
-      extra_body: { enable_thinking: false }
-    });
     let first = true;
-    for await (const ch of stream) {
-      const d = ch.choices[0]?.delta?.content || '';
-      if (!d) continue;
+    for await (const d of chatStream(messages)) {
       if (first) { eyes.set('talking'); status('Answering'); first = false; }
       out += d;
       bubble.textContent = clean(out);
@@ -448,7 +565,7 @@ async function ask(){
     }
   } catch (e) {
     bubble.textContent = 'Something went wrong: ' + (e.message || e);
-    eyes.flash('sad', 2000); status('Try again, or pick a lighter model in Settings.');
+    eyes.flash('sad', 2000); status(mode === 'pc' ? 'Check that the PC and tunnel are still running.' : 'Try again, or pick a lighter model in Settings.');
     history.pop(); busy = false; updateSend();
     return;
   }
@@ -513,7 +630,7 @@ micBtn.onclick = () => {
   rec.onend = () => {
     listening = false;
     micBtn.classList.remove('on'); micBtn.setAttribute('aria-pressed', 'false');
-    if (eyes.state === 'listening') eyes.set(engine ? 'idle' : 'sleep');
+    if (eyes.state === 'listening') eyes.set(ready() ? 'idle' : 'sleep');
     if (qEl.value.trim()) { fromVoice = true; ask(); }
   };
   try { rec.start(); } catch (err) { status('Mic error: ' + (err.message || err)); }
@@ -530,6 +647,31 @@ speakBox.onchange = () => { store.set('blink-speak', speakBox.checked ? '1' : '0
 $('#clear').onclick = () => {
   history = []; speechSynthesis?.cancel();
   logEl.innerHTML = '<p class="empty" id="empty">Chat cleared. Your files are still loaded.</p>';
+};
+
+const modeSel = $('#mode'), pcUrlEl = $('#pcUrl'), pcModelEl = $('#pcModel');
+function showMode(){
+  const pc = mode === 'pc';
+  $('#phoneModel').hidden = pc;
+  $('#pcUrlRow').hidden = $('#pcModelRow').hidden = $('#connect').hidden = !pc;
+}
+modeSel.value = mode; pcUrlEl.value = pcUrl; pcModelEl.value = pcModel; showMode();
+if (mode === 'pc' && !pcUrl) status('Enter your PC link and model in Settings, then tap Connect to PC.');
+modeSel.onchange = () => {
+  mode = modeSel.value; store.set('blink-mode', mode); showMode();
+  pcReady = false;
+  if (ready()) { eyes.set('idle'); wakeBtn.hidden = true; status('Awake. Ask me anything.'); }
+  else {
+    eyes.set('sleep'); wakeBtn.hidden = false;
+    status(mode === 'pc' ? 'Enter your PC link and model, then tap Connect to PC.' : 'Asleep. The first wake-up downloads the model once.');
+  }
+};
+$('#connect').onclick = () => {
+  pcUrl = pcUrlEl.value.trim().replace(/\/+$/, '');
+  pcModel = pcModelEl.value.trim() || 'qwen3:14b';
+  store.set('blink-pc-url', pcUrl); store.set('blink-pc-model', pcModel);
+  pcReady = false;
+  connectPC();
 };
 
 eyes.set('sleep');
