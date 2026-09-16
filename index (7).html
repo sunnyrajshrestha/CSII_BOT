@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0E1633">
+<title>Blink — ask your files</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='28' fill='%230E1633'/><rect x='20' y='28' width='22' height='44' rx='8' fill='%237CF3E4'/><rect x='58' y='28' width='22' height='44' rx='8' fill='%237CF3E4'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Unbounded:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E9E6F3; --ink:#1E1B33; --muted:#5E5A78; --line:#CFCAE3;
+  --screen:#0E1633; --rim:#1B2550; --glow:#7CF3E4; --pink:#FF5FA2;
+  --bubble:#FFFFFF; --mine:#1E1B33; --mine-ink:#F4F2FB;
+}
+@media (prefers-color-scheme:dark){
+  :root{--paper:#17152A;--ink:#ECEAF6;--muted:#A19DBD;--line:#2F2B4A;--bubble:#221F3A;--mine:#ECEAF6;--mine-ink:#17152A}
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--paper);color:var(--ink);font:16px/1.5 "Atkinson Hyperlegible",system-ui,-apple-system,sans-serif;-webkit-tap-highlight-color:transparent}
+button,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
+.app{height:100dvh;display:grid;grid-template-rows:auto 1fr auto;max-width:720px;margin:0 auto}
+
+/* Face */
+.face{position:relative;margin:max(10px,env(safe-area-inset-top)) 12px 0;height:min(38dvh,300px);min-height:190px;background:var(--screen);border-radius:36px;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:inset 0 0 0 6px var(--rim),inset 0 0 70px #000b;touch-action:manipulation}
+.eyes{display:flex;gap:min(14vw,92px);margin-top:-18px;transform:translate(var(--lx,0px),var(--ly,0px));transition:transform .28s cubic-bezier(.3,.7,.3,1)}
+.eye{width:min(20vw,96px);height:min(25vw,120px);background:var(--glow);border-radius:30%;box-shadow:0 0 18px #7CF3E4aa,0 0 56px #7CF3E450;transform:scale(var(--sx,1),calc(var(--sy,1) * var(--b,1)));transition:transform .14s ease,border-radius .3s ease}
+.face.blink .eye{--b:.07}
+.face.pop .eye{--sx:1.08}
+.face[data-state=sleep] .eye{--sy:.08}
+.face[data-state=loading] .eye{--sy:.4}
+.face[data-state=reading] .eye{--sy:.72}
+.face[data-state=thinking] .eye{--sy:.55;border-radius:22% 22% 45% 45%}
+.face[data-state=thinking] .eye.r{--sy:.78}
+.face[data-state=happy] .eye{--sy:.55;border-radius:50% 50% 14% 14% / 80% 80% 14% 14%}
+.face[data-state=listening] .eye{--sy:1.08}
+.face[data-state=sad] .eye{--sy:.6;border-radius:14% 14% 50% 50% / 14% 14% 80% 80%}
+.status{position:absolute;left:18px;right:18px;bottom:16px;margin:0;color:#BFD9E8;font-size:14px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{position:absolute;left:0;bottom:0;height:4px;width:0;background:var(--pink);transition:width .2s}
+.wake{position:absolute;bottom:44px;border:0;border-radius:999px;padding:10px 20px;background:var(--glow);color:var(--screen);font-weight:700;cursor:pointer}
+.name{position:absolute;top:16px;left:22px;margin:0;font:600 15px/1 Unbounded,system-ui,sans-serif;color:#5C6BA8;letter-spacing:.02em}
+
+/* Chat */
+.log{overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:10px;overscroll-behavior:contain}
+.empty{margin:auto;max-width:34ch;text-align:center;color:var(--muted)}
+.msg{max-width:86%;padding:10px 14px;border-radius:20px;white-space:pre-wrap;overflow-wrap:anywhere}
+.me{margin-left:auto;background:var(--mine);color:var(--mine-ink);border-bottom-right-radius:6px}
+.bot{background:var(--bubble);border:1px solid var(--line);border-bottom-left-radius:6px}
+.src{display:block;margin-top:6px;font-size:13px;color:var(--muted)}
+
+/* Dock */
+.dock{padding:8px 12px max(10px,env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+.files{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.files:empty{display:none}
+.chip{display:inline-flex;align-items:center;gap:4px;max-width:100%;padding:3px 4px 3px 10px;border-radius:999px;background:var(--bubble);border:1px solid var(--line);font-size:13px}
+.chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip button{border:0;background:none;width:24px;height:24px;border-radius:50%;cursor:pointer;color:var(--muted)}
+.row{display:flex;align-items:flex-end;gap:8px}
+.icon{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--bubble);display:grid;place-items:center;cursor:pointer}
+.icon svg{width:22px;height:22px}
+textarea{flex:1;min-height:44px;max-height:140px;resize:none;padding:10px 14px;border-radius:22px;border:1px solid var(--line);background:var(--bubble);font-size:16px;line-height:1.4}
+.send{background:var(--pink);border-color:var(--pink);color:#fff}
+.send:disabled{opacity:.4;cursor:default}
+.mic.on{background:var(--pink);border-color:var(--pink);color:#fff;animation:ping 1.2s ease-out infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 #FF5FA299}100%{box-shadow:0 0 0 14px #FF5FA200}}
+details{margin-top:8px;font-size:14px;color:var(--muted)}
+summary{cursor:pointer;padding:4px 0;width:max-content}
+.opts{display:grid;gap:10px;padding:8px 0 4px}
+.opts label{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--ink)}
+.opts select{max-width:62%;padding:6px 8px;border-radius:10px;border:1px solid var(--line);background:var(--bubble)}
+.opts input{width:20px;height:20px;accent-color:var(--pink)}
+.link{border:0;background:none;padding:0;color:var(--pink);cursor:pointer;justify-self:start}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){.eyes,.eye,.bar{transition:none}.mic.on{animation:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="face" id="face" data-state="sleep" aria-label="Blink">
+    <p class="name">Blink</p>
+    <div class="eyes" id="eyes"><div class="eye l"></div><div class="eye r"></div></div>
+    <button class="wake" id="wake">Wake Blink</button>
+    <p class="status" id="status" role="status">Asleep. The first wake-up downloads the model once.</p>
+    <div class="bar" id="bar"></div>
+  </section>
+
+  <main class="log" id="log">
+    <p class="empty" id="empty">Add a PDF, Word or text file, then ask about it. Everything runs on this phone.</p>
+  </main>
+
+  <footer class="dock">
+    <div class="files" id="files"></div>
+    <div class="row">
+      <label class="icon" title="Add files">
+        <input id="picker" class="sr" type="file" multiple accept=".pdf,.docx,.txt,.md,.csv,.json,.html,.htm">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.5l-8.4 8.4a5.5 5.5 0 01-7.8-7.8l8.9-8.9a3.7 3.7 0 015.2 5.2l-8.9 8.9a1.8 1.8 0 01-2.6-2.6L15.6 7.5"/></svg>
+        <span class="sr">Add files</span>
+      </label>
+      <textarea id="q" rows="1" placeholder="Ask about your files" enterkeyhint="send"></textarea>
+      <button class="icon mic" id="mic" aria-label="Speak your question" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>
+      </button>
+      <button class="icon send" id="send" disabled aria-label="Send">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      </button>
+    </div>
+    <details>
+      <summary>Settings</summary>
+      <div class="opts">
+        <label>Model <select id="model"></select></label>
+        <label>Speak answers <input type="checkbox" id="speak"></label>
+        <button class="link" id="clear">Clear chat</button>
+      </div>
+    </details>
+  </footer>
+</div>
+
+<script type="module">
+const WEBLLM = "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.85/+esm";
+let webllm = null;
+
+const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
+const PDFJS_WORKER = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+const MAMMOTH = "https://cdn.jsdelivr.net/npm/mammoth@1.12.3/mammoth.browser.min.js";
+
+const $ = s => document.querySelector(s);
+const face = $('#face'), eyesEl = $('#eyes'), statusEl = $('#status'), bar = $('#bar');
+const logEl = $('#log'), qEl = $('#q'), sendBtn = $('#send'), wakeBtn = $('#wake');
+const modelSel = $('#model'), speakBox = $('#speak');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch { return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch {} }
+};
+const status = t => statusEl.textContent = t;
+
+/* ---------- Eyes ---------- */
+const eyes = {
+  state: 'sleep', timer: 0, lastPointer: 0, lastPop: 0,
+  set(s){
+    this.state = s; face.dataset.state = s;
+    clearInterval(this.timer); this.timer = 0;
+    if (s === 'loading') this.sweep(28, 0, 700);
+    else if (s === 'reading') this.sweep(24, 16, 450);
+    else if (s === 'thinking') this.look(22, -18);
+    else if (s === 'sad') this.look(0, 14);
+    else if (s === 'talking') this.look(0, 6);
+    else if (s === 'listening') this.look(0, -4);
+    else this.look(0, 0);
+  },
+  look(x, y){ eyesEl.style.setProperty('--lx', x + 'px'); eyesEl.style.setProperty('--ly', y + 'px'); },
+  sweep(x, y, ms){
+    this.look(-x, y);
+    if (calm) return;
+    let d = 1;
+    this.timer = setInterval(() => { d = -d; this.look(d * x, y); }, ms);
+  },
+  blink(){ face.classList.add('blink'); setTimeout(() => face.classList.remove('blink'), 130); },
+  pop(){
+    const now = performance.now();
+    if (calm || now - this.lastPop < 110) return;
+    this.lastPop = now;
+    face.classList.add('pop'); setTimeout(() => face.classList.remove('pop'), 90);
+  },
+  flash(s, ms){ this.set(s); setTimeout(() => { if (this.state === s) this.set('idle'); }, ms); }
+};
+
+(function blinkLoop(){
+  if (!calm && !['sleep','happy','sad'].includes(eyes.state)) eyes.blink();
+  setTimeout(blinkLoop, 2500 + Math.random() * 3500);
+})();
+(function glanceLoop(){
+  if (!calm && eyes.state === 'idle' && performance.now() - eyes.lastPointer > 2500)
+    eyes.look(Math.round((Math.random() - .5) * 50), Math.round((Math.random() - .5) * 26));
+  setTimeout(glanceLoop, 1800 + Math.random() * 2200);
+})();
+addEventListener('pointermove', e => {
+  if (eyes.state !== 'idle') return;
+  const r = face.getBoundingClientRect();
+  const dx = (e.clientX - (r.left + r.width / 2)) / (innerWidth / 2);
+  const dy = (e.clientY - (r.top + r.height / 2)) / (innerHeight / 2);
+  eyes.lastPointer = performance.now();
+  eyes.look(Math.round(Math.max(-1, Math.min(1, dx)) * 30), Math.round(Math.max(-1, Math.min(1, dy)) * 18));
+});
+face.addEventListener('click', e => { if (e.target === wakeBtn) return; if (eyes.state === 'idle') eyes.flash('happy', 700); });
+
+/* ---------- Models ---------- */
+const CHOICES = [
+  ['Qwen3-0.6B', 'Qwen3 0.6B (lightest)'],
+  ['Llama-3.2-1B-Instruct', 'Llama 3.2 1B'],
+  ['Qwen2.5-1.5B-Instruct', 'Qwen2.5 1.5B'],
+  ['Qwen3-1.7B', 'Qwen3 1.7B (best answers)']
+];
+let engine = null, loadedId = null, busy = false;
+
+async function setupModels(){
+  try { webllm = await import(WEBLLM); }
+  catch {
+    eyes.set('sad'); wakeBtn.hidden = true;
+    status('AI engine did not load. Open this page from an https:// link with internet on.');
+    return;
+  }
+  let f16 = false;
+  if (navigator.gpu) {
+    try { const a = await navigator.gpu.requestAdapter(); f16 = !!a?.features.has('shader-f16'); } catch {}
+  }
+  const quant = f16 ? 'q4f16_1' : 'q4f32_1';
+  const list = webllm.prebuiltAppConfig.model_list;
+  for (const [base, label] of CHOICES) {
+    const id = `${base}-${quant}-MLC`;
+    const rec = list.find(m => m.model_id === id);
+    if (!rec) continue;
+    const o = new Option(rec.vram_required_MB ? `${label} · ~${Math.round(rec.vram_required_MB)} MB` : label, id);
+    modelSel.add(o);
+  }
+  const saved = store.get('blink-model');
+  if (saved && [...modelSel.options].some(o => o.value === saved)) {
+    modelSel.value = saved;
+    wake();
+  }
+}
+
+async function wake(){
+  if (busy || !webllm) return;
+  if (!navigator.gpu) {
+    eyes.set('sad');
+    status('No WebGPU here. Use recent Chrome on Android or Safari on iOS 26+, over HTTPS.');
+    return;
+  }
+  busy = true; updateSend();
+  wakeBtn.hidden = true;
+  eyes.set('loading');
+  const id = modelSel.value;
+  try {
+    const onProg = r => { status(r.text); bar.style.width = (r.progress * 100).toFixed(1) + '%'; };
+    if (!engine) engine = await webllm.CreateMLCEngine(id, { initProgressCallback: onProg });
+    else await engine.reload(id);
+    loadedId = id;
+    store.set('blink-model', id);
+    bar.style.width = '0';
+    status('Awake. Ask me anything.');
+    eyes.flash('happy', 1200);
+  } catch (e) {
+    bar.style.width = '0';
+    eyes.set('sad');
+    status('Model failed to load: ' + (e.message || e));
+    wakeBtn.hidden = false;
+  }
+  busy = false; updateSend();
+}
+wakeBtn.onclick = wake;
+modelSel.onchange = () => { if (engine) wake(); };
+
+/* ---------- Documents & retrieval ---------- */
+const seg = Intl.Segmenter ? new Intl.Segmenter(undefined, { granularity: 'word' }) : null;
+const STOP = new Set('a an and are as at be by for from has have how i in is it its of on or that the this to was were what when where which who why will with you your do does did can about into than then there these those not no'.split(' '));
+function toks(s){
+  s = s.toLowerCase();
+  const w = seg ? [...seg.segment(s)].filter(x => x.isWordLike).map(x => x.segment)
+                : s.split(/[^\p{L}\p{N}]+/u);
+  return w.filter(t => t && !STOP.has(t) && (t.length > 1 || /\d/.test(t)));
+}
+function mk(text, src){
+  const tk = toks(text), tf = new Map();
+  for (const t of tk) tf.set(t, (tf.get(t) || 0) + 1);
+  return { text, src, tf, len: tk.length || 1 };
+}
+function chunk(text, src, size = 700, overlap = 120){
+  text = text.replace(/\r/g, '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+  const out = [];
+  let i = 0;
+  while (i < text.length) {
+    let end = Math.min(i + size, text.length);
+    if (end < text.length) {
+      const cut = Math.max(text.lastIndexOf('\n', end), text.lastIndexOf('. ', end));
+      if (cut > i + size * .5) end = cut + 1;
+    }
+    const t = text.slice(i, end).trim();
+    if (t) out.push(mk(t, src));
+    if (end >= text.length) break;
+    i = Math.max(end - overlap, i + 1);
+  }
+  return out;
+}
+
+let docs = [], chunks = [], df = new Map(), avgdl = 1;
+function rebuild(){
+  chunks = docs.flatMap(d => d.chunks);
+  df = new Map();
+  let tot = 0;
+  for (const c of chunks) { tot += c.len; for (const t of c.tf.keys()) df.set(t, (df.get(t) || 0) + 1); }
+  avgdl = tot / (chunks.length || 1);
+}
+function retrieve(q, k = 4){
+  const total = chunks.reduce((n, c) => n + c.text.length, 0);
+  if (total <= 5000) return chunks;
+  const qt = [...new Set(toks(q))], N = chunks.length;
+  const hits = chunks.map(c => {
+    let s = 0;
+    for (const t of qt) {
+      const f = c.tf.get(t); if (!f) continue;
+      const n = df.get(t);
+      const idf = Math.log(1 + (N - n + .5) / (n + .5));
+      s += idf * f * 2.2 / (f + 1.2 * (.25 + .75 * c.len / avgdl));
+    }
+    return [s, c];
+  }).filter(x => x[0] > 0).sort((a, b) => b[0] - a[0]).slice(0, k).map(x => x[1]);
+  return hits.length ? hits : chunks.slice(0, 3);
+}
+
+const libs = {};
+function lib(url){
+  return libs[url] ||= new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = url; s.onload = res;
+    s.onerror = () => { delete libs[url]; rej(new Error('Could not load a file reader. Check the connection.')); };
+    document.head.appendChild(s);
+  });
+}
+async function readFile(f){
+  const ext = f.name.split('.').pop().toLowerCase();
+  if (ext === 'pdf') {
+    await lib(PDFJS);
+    pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+    const pdf = await pdfjsLib.getDocument({ data: await f.arrayBuffer() }).promise;
+    const out = [];
+    for (let p = 1; p <= pdf.numPages; p++) {
+      status(`Reading ${f.name}: page ${p} of ${pdf.numPages}`);
+      const tc = await (await pdf.getPage(p)).getTextContent();
+      out.push(...chunk(tc.items.map(it => it.str + (it.hasEOL ? '\n' : ' ')).join(''), `${f.name} p.${p}`));
+    }
+    return out;
+  }
+  if (ext === 'docx') {
+    await lib(MAMMOTH);
+    const r = await mammoth.extractRawText({ arrayBuffer: await f.arrayBuffer() });
+    return chunk(r.value, f.name);
+  }
+  let txt = await f.text();
+  if (ext === 'html' || ext === 'htm') txt = new DOMParser().parseFromString(txt, 'text/html').body.textContent || '';
+  return chunk(txt, f.name);
+}
+
+$('#picker').onchange = async e => {
+  const files = [...e.target.files];
+  e.target.value = '';
+  if (!files.length) return;
+  const prev = eyes.state;
+  eyes.set('reading');
+  let ok = 0;
+  for (const f of files) {
+    status(`Reading ${f.name}`);
+    try {
+      const c = await readFile(f);
+      if (!c.length) { status(`No text found in ${f.name}. Scanned PDFs need OCR first.`); continue; }
+      docs = docs.filter(d => d.name !== f.name);
+      docs.push({ name: f.name, chunks: c });
+      ok++;
+    } catch (err) {
+      status(`Could not read ${f.name}: ${err.message || err}`);
+    }
+  }
+  rebuild(); renderFiles();
+  if (ok) { status(`Read ${ok} file${ok > 1 ? 's' : ''}. Ask away.`); eyes.flash('happy', 1000); }
+  else eyes.flash('sad', 1500);
+  if (prev === 'sleep' && !engine) setTimeout(() => { if (!engine && eyes.state === 'idle') eyes.set('sleep'); }, 1100);
+};
+
+function renderFiles(){
+  const box = $('#files');
+  box.replaceChildren(...docs.map(d => {
+    const el = document.createElement('div');
+    el.className = 'chip';
+    el.innerHTML = '<span></span><button aria-label="Remove file">✕</button>';
+    el.firstChild.textContent = d.name;
+    el.lastChild.onclick = () => { docs = docs.filter(x => x !== d); rebuild(); renderFiles(); };
+    return el;
+  }));
+  qEl.placeholder = docs.length ? 'Ask about your files' : 'Ask me anything';
+}
+
+/* ---------- Chat ---------- */
+const SYS_DOCS = 'You are Blink, a small offline assistant on a phone. If the file excerpts the user provides answer the question, answer from them and mention the source name in square brackets. If they do not, ignore the excerpts and answer from your general knowledge, starting with "(general knowledge)". Be short and clear. Always give a real answer.';
+const SYS_CHAT = 'You are Blink, a friendly offline assistant on a phone. Answer every question directly in 1 to 3 sentences using your general knowledge. Always give a real answer.';
+let history = [];
+const NOPE = /not sure|don't know|do not know|can't help|cannot help/i;
+
+function addMsg(who, text){
+  $('#empty')?.remove();
+  const el = document.createElement('div');
+  el.className = 'msg ' + who;
+  el.textContent = text;
+  logEl.appendChild(el);
+  logEl.scrollTop = logEl.scrollHeight;
+  return el;
+}
+const clean = s => s.replace(/<think>[\s\S]*?(<\/think>|$)/g, '').replace(/\*\*/g, '').trim();
+
+function updateSend(){ sendBtn.disabled = busy || !qEl.value.trim(); }
+
+async function ask(){
+  const spoken = fromVoice; fromVoice = false;
+  const q = qEl.value.trim();
+  if (!q || busy) return;
+  if (!engine) { status('Wake Blink first.'); eyes.blink(); wakeBtn.focus(); return; }
+  busy = true; qEl.value = ''; autosize(); updateSend();
+  speechSynthesis?.cancel();
+  addMsg('me', q);
+
+  let ctx = '', srcs = [];
+  if (chunks.length) {
+    eyes.set('reading'); status('Looking through your files');
+    await sleep(400);
+    const hits = retrieve(q);
+    ctx = hits.map(c => `[${c.src}]\n${c.text}`).join('\n\n---\n\n');
+    srcs = [...new Set(hits.map(h => h.src))];
+  }
+  eyes.set('thinking'); status('Thinking');
+
+  const messages = [
+    { role: 'system', content: chunks.length ? SYS_DOCS : SYS_CHAT },
+    ...history.filter(m => !(m.role === 'assistant' && NOPE.test(m.content))).slice(-4),
+    { role: 'user', content: ctx ? `Excerpts from my files:\n\n${ctx}\n\nQuestion: ${q}` : q }
+  ];
+  history.push({ role: 'user', content: q });
+
+  const bubble = addMsg('bot', '');
+  let out = '';
+  try {
+    const stream = await engine.chat.completions.create({
+      messages, stream: true, temperature: 0.7, top_p: 0.8, presence_penalty: 0.5, max_tokens: 512,
+      extra_body: { enable_thinking: false }
+    });
+    let first = true;
+    for await (const ch of stream) {
+      const d = ch.choices[0]?.delta?.content || '';
+      if (!d) continue;
+      if (first) { eyes.set('talking'); status('Answering'); first = false; }
+      out += d;
+      bubble.textContent = clean(out);
+      eyes.pop();
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+  } catch (e) {
+    bubble.textContent = 'Something went wrong: ' + (e.message || e);
+    eyes.flash('sad', 2000); status('Try again, or pick a lighter model in Settings.');
+    history.pop(); busy = false; updateSend();
+    return;
+  }
+
+  out = clean(out) || '(no answer)';
+  bubble.textContent = out;
+  history.push({ role: 'assistant', content: out });
+  if (srcs.length) {
+    const s = document.createElement('span');
+    s.className = 'src';
+    s.textContent = 'From: ' + srcs.join(', ');
+    bubble.appendChild(s);
+  }
+  logEl.scrollTop = logEl.scrollHeight;
+  status('Awake. Ask me anything.');
+  busy = false; updateSend();
+
+  if ((spoken || speakBox.checked) && 'speechSynthesis' in window) say(out);
+  else eyes.flash('happy', 900);
+}
+
+function say(text){
+  const u = new SpeechSynthesisUtterance(text);
+  if (/[\u0E00-\u0E7F]/.test(text)) u.lang = 'th-TH';
+  u.rate = 1.05;
+  u.onstart = () => eyes.set('talking');
+  u.onboundary = () => eyes.pop();
+  u.onend = u.onerror = () => { if (eyes.state === 'talking') eyes.flash('happy', 800); };
+  speechSynthesis.speak(u);
+}
+
+/* ---------- Microphone ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const micBtn = $('#mic');
+let rec = null, listening = false, fromVoice = false;
+const unlockTTS = () => { if ('speechSynthesis' in window) speechSynthesis.speak(new SpeechSynthesisUtterance('')); };
+if (!SR) micBtn.hidden = true;
+micBtn.onclick = () => {
+  if (listening) { rec.stop(); return; }
+  if (busy) return;
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  unlockTTS();
+  rec = new SR();
+  rec.lang = navigator.language || 'en-US';
+  rec.interimResults = true;
+  rec.continuous = false;
+  rec.onstart = () => {
+    listening = true;
+    micBtn.classList.add('on'); micBtn.setAttribute('aria-pressed', 'true');
+    eyes.set('listening'); status('Listening');
+  };
+  rec.onresult = e => {
+    let text = '';
+    for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript;
+    qEl.value = text.trim(); autosize(); updateSend();
+  };
+  rec.onerror = e => {
+    status(e.error === 'not-allowed' ? 'Microphone blocked. Allow it in your browser settings.'
+         : e.error === 'no-speech' ? 'Heard nothing. Tap the mic and try again.'
+         : 'Mic error: ' + e.error);
+  };
+  rec.onend = () => {
+    listening = false;
+    micBtn.classList.remove('on'); micBtn.setAttribute('aria-pressed', 'false');
+    if (eyes.state === 'listening') eyes.set(engine ? 'idle' : 'sleep');
+    if (qEl.value.trim()) { fromVoice = true; ask(); }
+  };
+  try { rec.start(); } catch (err) { status('Mic error: ' + (err.message || err)); }
+};
+
+function autosize(){ qEl.style.height = 'auto'; qEl.style.height = Math.min(qEl.scrollHeight, 140) + 'px'; }
+qEl.addEventListener('input', () => { autosize(); updateSend(); });
+qEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); ask(); }
+});
+sendBtn.onclick = ask;
+speakBox.checked = store.get('blink-speak') === '1';
+speakBox.onchange = () => { store.set('blink-speak', speakBox.checked ? '1' : '0'); if (speakBox.checked) unlockTTS(); };
+$('#clear').onclick = () => {
+  history = []; speechSynthesis?.cancel();
+  logEl.innerHTML = '<p class="empty" id="empty">Chat cleared. Your files are still loaded.</p>';
+};
+
+eyes.set('sleep');
+setupModels();
+</script>
+</body>
+</html>
