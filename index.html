@@ -772,7 +772,7 @@ function startWake(){
   r.onerror = e => {
     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
       wakeBlocked = true;
-      status('Tap anywhere, then allow the microphone so I can hear “Hey Blink”.');
+      status('Tap anywhere to enable "Hey Blink" speech recognition');
     } else if (e.error !== 'no-speech' && e.error !== 'aborted') wakeFails++;
   };
   r.onend = () => {
