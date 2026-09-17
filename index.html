@@ -29,8 +29,8 @@ button,textarea{font:inherit;color:inherit}
 /* ---------- Face ---------- */
 .face{position:relative;margin:max(10px,env(safe-area-inset-top)) 12px 0;height:min(40dvh,320px);min-height:210px;background:var(--screen);border-radius:36px;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:inset 0 0 0 6px var(--rim),inset 0 0 70px #000b;touch-action:manipulation;transition:box-shadow .3s}
 .head{display:flex;flex-direction:column;align-items:center;gap:min(4vw,22px);margin-top:-22px;transform:translate(var(--lx,0px),var(--ly,0px));transition:transform .28s cubic-bezier(.3,.7,.3,1)}
-.eyes{display:flex;gap:min(14vw,92px)}
-.eye{position:relative;display:grid;place-items:center;width:min(19vw,92px);height:min(23vw,112px);background:var(--glow);border-radius:30%;box-shadow:0 0 18px #7CF3E4aa,0 0 56px #7CF3E450;transform:scale(var(--sx,1),calc(var(--sy,1) * var(--b,1)));transition:transform .14s ease,border-radius .3s ease,background .3s,box-shadow .3s}
+.eyes{--ew:min(19vw,92px);--eh:min(23vw,112px);--bw:min(15vw,72px);position:relative;display:flex;gap:min(14vw,92px)}
+.eye{position:relative;display:grid;place-items:center;width:var(--ew);height:var(--eh);background:var(--glow);border-radius:30%;box-shadow:0 0 18px #7CF3E4aa,0 0 56px #7CF3E450;transform:scale(var(--sx,1),calc(var(--sy,1) * var(--b,1)));transition:transform .14s ease,border-radius .3s ease,background .3s,box-shadow .3s}
 .face.blink .eye{--b:.07}
 .face.pop .eye{--sx:1.08}
 .face[data-state=sleep] .eye{--sy:.08}
@@ -42,27 +42,99 @@ button,textarea{font:inherit;color:inherit}
 .face[data-state=listening] .eye{--sy:1.08}
 .face[data-state=sad] .eye{--sy:.6;border-radius:14% 14% 50% 50% / 14% 14% 80% 80%}
 
-/* emoji eyes */
+/* ---------- Manga expressions ---------- */
 .emo{font-size:min(14vw,72px);line-height:1;opacity:0;transform:scale(.3);transition:opacity .2s ease,transform .3s cubic-bezier(.3,1.6,.5,1);filter:drop-shadow(0 0 10px #ffffff66);pointer-events:none}
-.face.mood .eye{--sy:1;background:transparent;box-shadow:none;border-radius:30%}
-.face.mood .emo{opacity:1;transform:scale(1)}
+.face.glyph .eye{--sy:1;background:transparent;box-shadow:none;border-radius:30%}
+.face.glyph .emo{opacity:1;transform:scale(1)}
+.face.txt .emo{font:700 min(18vw,88px)/1 Unbounded,system-ui,sans-serif;color:var(--glow);text-shadow:0 0 12px #7CF3E4,0 0 32px #7CF3E488;filter:none}
 .face.mood-love .emo{animation:beat .9s ease-in-out infinite}
-.face.mood-shine .emo{animation:twinkle 1.2s ease-in-out infinite}
-.face.mood-laughing .emo{animation:bounce .45s ease-in-out infinite}
-.face.mood-angry .emo,.face.mood-scared .emo{animation:shake .25s linear infinite}
-.face.mood-stressed .emo{animation:wobble 1s ease-in-out infinite}
-.face.mood-sleepy .emo{animation:drift 2.4s ease-in-out infinite}
-.face.mood-worried .emo,.face.mood-sad .emo{animation:droop 2s ease-in-out infinite}
-.face.mood-confused .emo{animation:tilt 1.4s ease-in-out infinite}
+.face.mood-laughing .emo{animation:squish .35s ease-in-out infinite}
+.face.mood-stressed .emo{animation:spin 1s linear infinite}
+.face.mood-sad .emo{animation:droop 1.6s ease-in-out infinite}
+.face.mood-confused .emo{font-size:min(9vw,42px);animation:dart 1.6s ease-in-out infinite}
 
-/* red teased eyes */
+/* sparkly shoujo eyes */
+.eye::before,.eye::after{content:'';position:absolute;opacity:0;pointer-events:none;transition:opacity .2s}
+.face.mood-shine .eye::before,.face.mood-cool .eye.r::before{content:'✦';opacity:1;top:8%;right:12%;font-size:min(8vw,38px);line-height:1;color:#fff;text-shadow:0 0 8px #fff;animation:twinkle 1.1s ease-in-out infinite}
+.face.mood-shine .eye::after{content:'✦';opacity:1;bottom:14%;left:14%;font-size:min(4.5vw,22px);line-height:1;color:#fff;animation:twinkle 1.1s .4s ease-in-out infinite}
+.face.mood-shine .eye{--sy:1.06}
+/* cool: half-lidded */
+.face.mood-cool .eye{--sy:.45;border-radius:8% 8% 50% 50%}
+/* worried: smaller eyes */
+.face.mood-worried .eye{--sx:.82;--sy:.82}
+/* scared: white-ring eyes with tiny pupils */
+.face.mood-scared .eye{--sy:1;background:transparent;border:min(1.2vw,6px) solid var(--glow);border-radius:50%}
+.face.mood-scared .eye::after{opacity:1;inset:0;margin:auto;width:20%;height:17%;border-radius:50%;background:var(--glow);box-shadow:0 0 10px var(--glow);animation:shake .12s linear infinite}
+
+/* red eyes (teased / angry) */
 .face.red{box-shadow:inset 0 0 0 6px #5A1830,inset 0 0 70px #000b}
 .face.red .eye{--sy:.62;background:var(--red);box-shadow:0 0 18px #FF3B5Caa,0 0 60px #FF3B5C66;border-radius:18% 18% 48% 48%}
 .face.red .eye.l{rotate:14deg}
 .face.red .eye.r{rotate:-14deg}
+.face.mood-angry .eye{--sy:.5}
+
+/* brows */
+.brow{position:absolute;top:calc(var(--eh) * -.2);width:var(--bw);height:min(1.6vw,8px);border-radius:8px;background:var(--glow);box-shadow:0 0 10px var(--glow);opacity:0;transition:opacity .2s,rotate .25s,translate .25s}
+.brow.l{left:calc((var(--ew) - var(--bw)) / 2)}
+.brow.r{right:calc((var(--ew) - var(--bw)) / 2)}
+.face.red .brow{opacity:1;background:var(--red);box-shadow:0 0 10px var(--red)}
+.face.red .brow.l{rotate:22deg;translate:0 6px}
+.face.red .brow.r{rotate:-22deg;translate:0 6px}
+.face.mood-worried .brow,.face.mood-sad .brow{opacity:1}
+.face.mood-worried .brow.l,.face.mood-sad .brow.l{rotate:-18deg}
+.face.mood-worried .brow.r,.face.mood-sad .brow.r{rotate:18deg}
+.face.mood-scared .brow{opacity:1;translate:0 -12px}
+
+/* blush, tears */
+.blush{position:absolute;bottom:calc(var(--eh) * -.18);width:min(13vw,62px);height:min(3.4vw,16px);border-radius:50%;background:repeating-linear-gradient(115deg,#FF7FB0 0 3px,transparent 3px 7px);box-shadow:0 0 14px #FF5FA266;opacity:0;transition:opacity .25s}
+.blush.l{left:calc(var(--ew) * -.1)}
+.blush.r{right:calc(var(--ew) * -.1)}
+.face.mood-love .blush,.face.mood-laughing .blush{opacity:1}
+.tear{position:absolute;top:calc(var(--eh) * .62);width:min(2.6vw,12px);height:min(20vw,96px);border-radius:0 0 8px 8px;background:linear-gradient(#9FE8FF,#4FB8FF 40%,#9FE8FF 60%,#4FB8FF) 0 0/100% 40px;opacity:0;transition:opacity .25s}
+.tear.l{left:calc(var(--ew) * .5 - 6px)}
+.tear.r{right:calc(var(--ew) * .5 - 6px)}
+.face.mood-sad .tear{opacity:.85;animation:flow .5s linear infinite}
+
+/* effects layer */
+.fx{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.fx > *{position:absolute;opacity:0;transition:opacity .2s}
+.speed{inset:-60%;background:repeating-conic-gradient(from 0deg,#ffffff30 0deg 1.2deg,transparent 1.2deg 7deg);-webkit-mask:radial-gradient(circle,transparent 26%,#000 52%);mask:radial-gradient(circle,transparent 26%,#000 52%)}
+.face.mood-scared .speed,.face.impact .speed{opacity:1;animation:flicker .12s steps(2) infinite}
+.gloom{left:12%;right:12%;top:0;height:55%;background:repeating-linear-gradient(90deg,#9A8CFF66 0 2px,transparent 2px 16px);-webkit-mask:linear-gradient(#000,transparent);mask:linear-gradient(#000,transparent)}
+.face.mood-sad .gloom{opacity:1}
+.vein{top:12%;right:15%;font-size:min(11vw,52px);line-height:1}
+.face.red .vein{opacity:1;animation:throb .5s ease-in-out infinite}
+.sweat{top:24%;right:17%;width:min(4.6vw,22px);height:min(4.6vw,22px);background:linear-gradient(135deg,#E6FAFF,#6CC8FF);border-radius:0 50% 50% 50%;rotate:45deg;box-shadow:0 0 12px #6CC8FF88}
+.face.mood-worried .sweat,.face.mood-stressed .sweat,.face.mood-confused .sweat{opacity:1;animation:slide 1.8s ease-in infinite}
+.face.mood-confused .sweat{right:auto;left:17%;rotate:45deg}
+.zzz{top:14%;right:16%;font:700 min(6vw,28px)/1 Unbounded,system-ui,sans-serif;color:#BFD9E8;white-space:pre}
+.face.mood-sleepy .zzz{opacity:1;animation:floatz 2.6s ease-in-out infinite}
+.qmark{top:10%;right:18%;font:700 min(10vw,48px)/1 Unbounded,system-ui,sans-serif;color:#FFD66B;text-shadow:0 0 12px #FFD66B88}
+.face.mood-confused .qmark{opacity:1;animation:bob 1s ease-in-out infinite}
+.hearts{inset:0}
+.hearts i,.sparks i{position:absolute;font-style:normal;line-height:1}
+.hearts i{bottom:10%;color:#FF5F8F;font-size:min(6vw,28px);text-shadow:0 0 10px #FF5F8F}
+.hearts i:nth-child(1){left:14%;animation:rise 2.2s ease-in infinite}
+.hearts i:nth-child(2){right:14%;animation:rise 2.2s .7s ease-in infinite}
+.hearts i:nth-child(3){left:46%;animation:rise 2.2s 1.4s ease-in infinite}
+.face.mood-love .hearts{opacity:1}
+.sparks{inset:0}
+.sparks i{color:#FFF3A8;text-shadow:0 0 10px #FFE066;font-size:min(6vw,28px)}
+.sparks i:nth-child(1){top:14%;left:16%;animation:twinkle 1s ease-in-out infinite}
+.sparks i:nth-child(2){top:20%;right:14%;animation:twinkle 1s .3s ease-in-out infinite}
+.sparks i:nth-child(3){bottom:22%;left:12%;animation:twinkle 1s .6s ease-in-out infinite}
+.sparks i:nth-child(4){bottom:26%;right:18%;animation:twinkle 1s .15s ease-in-out infinite}
+.face.mood-shine .sparks,.face.mood-laughing .sparks{opacity:1}
+
+/* whole-face motion */
+.face.mood-angry .eyes,.face.mood-angry .mouth-wrap{animation:shake .14s linear infinite}
+.face.mood-scared .eyes,.face.mood-scared .mouth-wrap{animation:shake .2s linear infinite}
+.face.mood-laughing .head{animation:hop .35s ease-in-out infinite}
+.face.impact .head{animation:punch .38s cubic-bezier(.3,1.6,.5,1)}
 
 /* ---------- Mouth ---------- */
-.mouth{--mc:var(--glow);width:min(13vw,62px);height:min(3.6vw,18px);border:0 solid var(--mc);border-bottom-width:5px;border-radius:0 0 50% 50% / 0 0 100% 100%;background:transparent;filter:drop-shadow(0 0 6px var(--mc));transition:width .18s ease,height .12s ease,border-radius .2s ease,background .2s,border-color .3s,translate .25s,rotate .25s}
+.mouth-wrap{--mc:var(--glow);position:relative;display:grid;place-items:center;min-height:min(7vw,34px)}
+.mouth{width:min(13vw,62px);height:min(3.6vw,18px);border:0 solid var(--mc);border-bottom-width:5px;border-radius:0 0 50% 50% / 0 0 100% 100%;background:transparent;filter:drop-shadow(0 0 6px var(--mc));transition:width .18s ease,height .12s ease,border-radius .2s ease,background .2s,border-color .3s,translate .25s,rotate .25s}
 .face[data-state=sleep] .mouth,.face[data-state=loading] .mouth,.face[data-state=reading] .mouth{width:26px;height:0;border-radius:4px}
 .face[data-state=thinking] .mouth{width:22px;height:0;border-radius:4px;translate:16px 0}
 .face[data-state=listening] .mouth{width:18px;height:18px;border-width:4px;border-radius:50%}
@@ -70,14 +142,21 @@ button,textarea{font:inherit;color:inherit}
 .face[data-state=sad] .mouth{border-bottom-width:0;border-top-width:5px;height:14px;border-radius:50% 50% 0 0 / 100% 100% 0 0;translate:0 6px}
 .face.mood-love .mouth,.face.mood-shine .mouth,.face.mood-cool .mouth{width:min(16vw,76px);height:min(5vw,24px);border-bottom-width:5px;border-top-width:0;border-radius:0 0 50% 50% / 0 0 100% 100%}
 .face.mood-laughing .mouth{width:min(15vw,70px);height:min(6vw,28px);border-width:0;background:var(--mc);border-radius:0 0 50% 50% / 0 0 100% 100%;animation:bounce .45s ease-in-out infinite}
-.face.mood-sad .mouth,.face.mood-worried .mouth{width:min(11vw,52px);height:14px;border-bottom-width:0;border-top-width:5px;border-radius:50% 50% 0 0 / 100% 100% 0 0;translate:0 6px}
-.face.mood-angry .mouth{width:40px;height:10px;border-bottom-width:0;border-top-width:6px;border-radius:50% 50% 0 0 / 100% 100% 0 0}
-.face.mood-scared .mouth{width:24px;height:30px;border-width:0;background:var(--mc);border-radius:50%;animation:shake .25s linear infinite}
-.face.mood-stressed .mouth{width:40px;height:0;border-radius:4px;animation:wobble .8s ease-in-out infinite}
+.face.mood-sad .mouth{width:min(11vw,52px);height:14px;border-bottom-width:0;border-top-width:5px;border-radius:50% 50% 0 0 / 100% 100% 0 0;translate:0 6px}
+.face.mood-scared .mouth{width:16px;height:22px;border-width:0;background:var(--mc);border-radius:50%}
 .face.mood-sleepy .mouth{width:14px;height:14px;border-width:4px;border-radius:50%;animation:drift 2.4s ease-in-out infinite}
-.face.mood-confused .mouth{width:34px;height:0;border-radius:4px;rotate:14deg}
-.face.red .mouth{--mc:var(--red);width:46px;height:14px;border-top-width:0;border-bottom-width:5px;border-radius:0 0 50% 50% / 0 0 100% 100%;background:transparent;rotate:-14deg;translate:10px 0;animation:none}
-.face.speak .head .mouth{width:min(11vw,50px);height:var(--mo,8px);border-width:0;background:var(--mc);border-radius:45%;rotate:0deg;translate:0 0;animation:none;transition:height .08s ease}
+.face.red .mouth-wrap{--mc:var(--red)}
+.face.mood-worried .mouth,.face.mood-stressed .mouth,.face.mood-confused .mouth,.face.red .mouth{opacity:0}
+.mart{position:absolute;width:min(17vw,80px);height:auto;overflow:visible;filter:drop-shadow(0 0 6px var(--mc))}
+.mart *{opacity:0;fill:none;stroke:var(--mc);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;transition:opacity .15s}
+.face.mood-worried .m-wavy,.face.mood-stressed .m-wavy{opacity:1}
+.face.mood-stressed .mart{animation:wobble .8s ease-in-out infinite}
+.face.mood-confused .m-squig{opacity:1}
+.face.mood-teased .m-cat{opacity:1}
+.face.mood-angry .m-shark,.face.mood-angry .m-teeth{opacity:1}
+.face.mood-angry .m-shark{fill:#2A0714}
+.face.speak .head .mart *{opacity:0}
+.face.speak .head .mouth{opacity:1;width:min(11vw,50px);height:var(--mo,8px);border-width:0;background:var(--mc);border-radius:45%;rotate:0deg;translate:0 0;animation:none;transition:height .08s ease}
 
 @keyframes beat{0%,100%{transform:scale(1)}30%{transform:scale(1.22)}45%{transform:scale(.95)}60%{transform:scale(1.12)}}
 @keyframes twinkle{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.18) rotate(18deg)}}
@@ -87,12 +166,23 @@ button,textarea{font:inherit;color:inherit}
 @keyframes drift{0%,100%{transform:translateY(4%) scale(.96)}50%{transform:translateY(-4%) scale(1.04)}}
 @keyframes droop{0%,100%{transform:translateY(0)}50%{transform:translateY(8%)}}
 @keyframes tilt{0%,100%{transform:rotate(-15deg)}50%{transform:rotate(15deg)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes squish{0%,100%{transform:scale(1,1)}50%{transform:scale(1.15,.8)}}
+@keyframes dart{0%,100%{transform:translateX(-12%)}50%{transform:translateX(12%)}}
+@keyframes flow{to{background-position:0 40px}}
+@keyframes flicker{50%{opacity:.55}}
+@keyframes throb{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
+@keyframes slide{0%{transform:translateY(-6px);opacity:0}20%{opacity:1}100%{transform:translateY(22px);opacity:0}}
+@keyframes floatz{0%{transform:translate(0,8px);opacity:.3}50%{opacity:1}100%{transform:translate(10px,-10px);opacity:.3}}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-8px) rotate(8deg)}}
+@keyframes rise{0%{transform:translateY(0) scale(.6);opacity:0}20%{opacity:1}100%{transform:translateY(-140px) scale(1.1);opacity:0}}
+@keyframes hop{0%,100%{scale:1}50%{scale:1.04 .96}}
+@keyframes punch{0%{scale:1}35%{scale:1.14}100%{scale:1}}
 
-.status{position:absolute;left:18px;right:18px;bottom:14px;margin:0;color:#BFD9E8;font-size:14px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status{position:absolute;left:18px;right:18px;bottom:12px;margin:0;color:#BFD9E8;font-size:14px;line-height:1.3;text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .retry{position:absolute;top:10px;left:50%;translate:-50% 0;border:0;border-radius:999px;padding:7px 16px;background:var(--glow);color:var(--screen);font-weight:700;font-size:14px;cursor:pointer}
-.face:has(.retry:not([hidden])) .ear{display:none}
-.ear{position:absolute;top:14px;right:18px;margin:0;padding:3px 10px;border-radius:999px;background:#FF5FA233;color:#FFB3D2;font-size:13px}
-.name{position:absolute;top:16px;left:22px;margin:0;font:600 15px/1 Unbounded,system-ui,sans-serif;color:#5C6BA8;letter-spacing:.02em}
+.name{position:absolute;top:16px;left:22px;margin:0;font:600 15px/1 Unbounded,system-ui,sans-serif;color:#5C6BA8;letter-spacing:.02em;z-index:1}
+.powered{display:block;margin-top:4px;font:400 11px/1 "Atkinson Hyperlegible",system-ui,sans-serif;color:#8A96C8;letter-spacing:.03em}
 
 /* ---------- Chat ---------- */
 .log{overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:10px;overscroll-behavior:contain}
@@ -130,24 +220,49 @@ textarea{width:100%;min-height:44px;max-height:140px;resize:none;padding:10px 14
 .menu button:disabled{opacity:.45;cursor:default}
 .menu small{color:var(--muted);font-weight:400}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-@media (prefers-reduced-motion:reduce){.head,.eye,.mouth{transition:none}.mic.on,.face .emo,.face .mouth{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.head,.eye,.mouth{transition:none}.mic.on,.face *,.face .eye::before,.face .eye::after{animation:none!important}}
 </style>
 </head>
 <body>
 <div class="app">
   <section class="face" id="face" data-state="sleep" aria-label="Blink">
-    <p class="name">Powered by FabLab</p>
-    <p class="ear" id="ear" hidden>Say “Hey Blink”</p>
+    <div class="fx" aria-hidden="true">
+      <div class="speed"></div>
+      <div class="gloom"></div>
+      <div class="hearts"><i>♥</i><i>♥</i><i>♥</i></div>
+      <div class="sparks"><i>✦</i><i>✦</i><i>✦</i><i>✦</i></div>
+      <div class="vein">💢</div>
+      <div class="sweat"></div>
+      <div class="zzz">Z
+  z
+    z</div>
+      <div class="qmark">?</div>
+    </div>
+    <p class="name">Blink <span class="powered">powered by FabLab</span></p>
     <div class="head" id="head">
-      <div class="eyes"><div class="eye l"><span class="emo"></span></div><div class="eye r"><span class="emo"></span></div></div>
-      <div class="mouth" id="mouth"></div>
+      <div class="eyes">
+        <div class="eye l"><span class="emo"></span></div><div class="eye r"><span class="emo"></span></div>
+        <i class="brow l"></i><i class="brow r"></i>
+        <i class="blush l"></i><i class="blush r"></i>
+        <i class="tear l"></i><i class="tear r"></i>
+      </div>
+      <div class="mouth-wrap">
+        <div class="mouth" id="mouth"></div>
+        <svg class="mart" viewBox="0 0 60 30" aria-hidden="true">
+          <path class="m-wavy" d="M6 15q6-7 12 0t12 0t12 0t12 0"/>
+          <path class="m-squig" d="M8 17l7-5l7 5l7-5l7 5l7-5l7 5"/>
+          <path class="m-cat" d="M12 10q9 13 18 0q9 13 18 0"/>
+          <path class="m-shark" d="M8 6H52Q48 28 30 28Q12 28 8 6Z"/>
+          <path class="m-teeth" d="M12 7l4 7l4-7l4 7l4-7l4 7l4-7l4 7l4-7"/>
+        </svg>
+      </div>
     </div>
     <button class="retry" id="retry" hidden>Try again</button>
     <p class="status" id="status" role="status">Waking up…</p>
   </section>
 
   <main class="log" id="log">
-    <p class="empty" id="empty">Say “Hey Blink”, tap the mic, or add a file and ask me about it.</p>
+    <p class="empty" id="empty">Tap the mic to talk to me, or add a file and ask me about it.</p>
   </main>
 
   <footer class="dock">
@@ -193,7 +308,7 @@ const MAMMOTH = "https://cdn.jsdelivr.net/npm/mammoth@1.12.3/mammoth.browser.min
 const $ = s => document.querySelector(s);
 const face = $('#face'), headEl = $('#head'), mouthEl = $('#mouth'), statusEl = $('#status');
 const logEl = $('#log'), qEl = $('#q'), sendBtn = $('#send'), retryBtn = $('#retry');
-const micBtn = $('#mic'), speakBtn = $('#speakBtn'), earEl = $('#ear');
+const micBtn = $('#mic'), speakBtn = $('#speakBtn');
 const brainBtn = $('#brainBtn'), brainMenu = $('#brainMenu'), brainIcon = $('#brainIcon');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -212,7 +327,17 @@ const tier = id => PC_TIERS.find(t => t[0] === id) || PC_TIERS[2];
 const tierLabel = id => tier(id)[1] + ' ' + tier(id)[2];
 
 /* ---------- Eyes & mouth ---------- */
-const MOODS = { love: '❤️', shine: '✨', laughing: '😂', angry: '😠', scared: '😱', worried: '😟', stressed: '😵‍💫', sleepy: '😴', sad: '😢', confused: '❓', cool: '😎' };
+const MOODS = {
+  love: { emo: ['❤️', '❤️'] },
+  laughing: { txt: ['>', '<'] },
+  stressed: { txt: ['@', '@'] },
+  sad: { txt: ['T', 'T'] },
+  sleepy: { txt: ['—', '—'] },
+  confused: { txt: ['●', '●'] },
+  shine: {}, cool: {}, worried: {}, scared: {},
+  teased: { red: true }, angry: { red: true }
+};
+const DRAMATIC = new Set(['teased', 'angry', 'scared', 'love', 'shine', 'laughing']);
 const eyes = {
   state: 'sleep', timer: 0, lastPointer: 0, lastPop: 0, moodName: '', moodTimer: 0, idleNap: false, flapTimer: 0,
   set(s){
@@ -258,19 +383,29 @@ const eyes = {
   },
   flash(s, ms){ this.set(s); setTimeout(() => { if (this.state === s) this.set('idle'); }, ms); },
   mood(name){
-    if (name !== 'teased' && !MOODS[name]) return;
+    const m = MOODS[name];
+    if (!m) return;
     this.clearMood(0);
     this.moodName = name;
-    if (name === 'teased') face.classList.add('red');
-    else {
-      face.querySelectorAll('.emo').forEach(e => e.textContent = MOODS[name]);
-      face.classList.add('mood', 'mood-' + name);
+    face.classList.add('mood', 'mood-' + name);
+    if (m.red) face.classList.add('red');
+    const marks = m.emo || m.txt;
+    if (marks) {
+      face.classList.add('glyph');
+      if (m.txt) face.classList.add('txt');
+      face.querySelectorAll('.emo').forEach((e, i) => e.textContent = marks[i]);
+    }
+    if (DRAMATIC.has(name) && !calm) {
+      face.classList.remove('impact'); void face.offsetWidth;
+      face.classList.add('impact');
+      clearTimeout(this.impactTimer);
+      this.impactTimer = setTimeout(() => face.classList.remove('impact'), 380);
     }
   },
   clearMood(ms = 0){
     clearTimeout(this.moodTimer);
     const off = () => {
-      [...face.classList].filter(c => c === 'mood' || c === 'red' || c.startsWith('mood-')).forEach(c => face.classList.remove(c));
+      [...face.classList].filter(c => ['mood', 'red', 'glyph', 'txt'].includes(c) || c.startsWith('mood-')).forEach(c => face.classList.remove(c));
       this.moodName = ''; this.idleNap = false;
     };
     if (ms <= 0) off(); else this.moodTimer = setTimeout(off, ms);
@@ -386,7 +521,6 @@ async function connectPC(){
       : 'Brain error: ' + m);
   }
   busy = false; warming = false; updateSend();
-  resumeWake();
 }
 retryBtn.onclick = connectPC;
 
@@ -624,7 +758,6 @@ async function ask(){
     eyes.clearMood(0); eyes.flash('sad', 2000);
     status('Check that the PC and Tailscale are still running.');
     history.pop(); busy = false; updateSend();
-    resumeWake();
     return;
   }
   eyes.talk(false);
@@ -659,7 +792,6 @@ speakBtn.onclick = () => {
   else if ('speechSynthesis' in window) speechSynthesis.cancel();
 };
 function say(text){
-  stopWake();
   speaking = true;
   const u = new SpeechSynthesisUtterance(text.replace(/\[[^\]]*\]/g, '').replace(/\(general knowledge\)/i, ''));
   if (/[\u0E00-\u0E7F]/.test(text)) u.lang = 'th-TH';
@@ -673,7 +805,6 @@ function say(text){
     if (eyes.state === 'talking') eyes.flash('happy', 800);
     eyes.clearMood(1500);
     lastActive = Date.now();
-    resumeWake();
   };
   speechSynthesis.speak(u);
 }
@@ -682,10 +813,11 @@ function say(text){
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let rec = null;
 if (!SR) micBtn.hidden = true;
-micBtn.onclick = () => { if (listening) rec.stop(); else startMic(); };
+const MIC_LINES = ['Ears on!', 'You rang?', 'Listening. Dramatically.', 'Yes, my favorite carbon-based friend?', 'Beep boop, go!'];
+micBtn.onclick = () => { if (listening) rec.stop(); else startMic(MIC_LINES[Math.floor(Math.random() * MIC_LINES.length)]); };
 function startMic(greeting){
   if (!SR || listening || busy) return;
-  micBusy = true; stopWake(); chirpInit();
+  micBusy = true;
   if ('speechSynthesis' in window) speechSynthesis.cancel();
   unlockTTS();
   rec = new SR();
@@ -704,7 +836,7 @@ function startMic(greeting){
   };
   rec.onerror = e => {
     status(e.error === 'not-allowed' ? 'Microphone blocked. Allow it in your browser settings.'
-         : e.error === 'no-speech' ? 'I heard nothing. Say “Hey Blink” or tap the mic.'
+         : e.error === 'no-speech' ? 'I heard nothing. Tap the mic and try again.'
          : 'Mic error: ' + e.error);
   };
   rec.onend = () => {
@@ -713,86 +845,19 @@ function startMic(greeting){
     if (eyes.state === 'listening') eyes.set(pcReady ? 'idle' : 'sad');
     micBusy = false;
     if (qEl.value.trim()) submitVoice();
-    else resumeWake();
   };
-  try { rec.start(); } catch (err) { micBusy = false; status('Mic error: ' + (err.message || err)); resumeWake(); }
+  try { rec.start(); } catch (err) { micBusy = false; status('Mic error: ' + (err.message || err)); }
 }
 function submitVoice(){
   fromVoice = true;
-  ask().finally(() => { if (!speaking) resumeWake(); });
+  ask();
 }
 
-/* ---------- Wake word ---------- */
-const WAKE = /(?:hey|hi|hay|okay|ok|yo)[\s,.!]*(?:blink|blinks|blank|bling|plink|link|blinky)\b|เฮ้\s*(?:บลิ้ง|บลิงค์|บลิ๊ง|บลิงก์)/i;
-const WAKE_LINES = ['Ears on!', 'You rang?', 'Blink is listening. Dramatically.', 'Yes, my favorite carbon-based friend?', 'Beep boop, go!'];
-let wakeRec = null, wakeFails = 0, audioCtx = null, wakeBlocked = false;
-
-function chirpInit(){ try { audioCtx ||= new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch {} }
-function chirp(){
-  if (!audioCtx) return;
-  const t = audioCtx.currentTime;
-  [880, 1320].forEach((f, i) => {
-    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-    o.frequency.value = f; o.type = 'sine';
-    g.gain.setValueAtTime(0.0001, t + i * 0.09);
-    g.gain.exponentialRampToValueAtTime(0.25, t + i * 0.09 + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.09 + 0.08);
-    o.connect(g).connect(audioCtx.destination);
-    o.start(t + i * 0.09); o.stop(t + i * 0.09 + 0.1);
-  });
-}
-const wakeAllowed = () => SR && !wakeBlocked && !busy && !micBusy && !listening && !speaking && document.visibilityState === 'visible';
-function stopWake(){
-  if (!wakeRec) return;
-  const r = wakeRec; wakeRec = null;
-  r.onend = r.onresult = r.onerror = null;
-  try { r.abort(); } catch {}
-  earEl.hidden = true;
-}
-function resumeWake(){ setTimeout(startWake, 500); }
-function startWake(){
-  if (wakeRec || !wakeAllowed()) return;
-  const r = new SR();
-  wakeRec = r;
-  r.lang = navigator.language || 'en-US';
-  r.continuous = true;
-  r.interimResults = true;
-  r.onstart = () => { earEl.hidden = false; wakeFails = 0; };
-  r.onresult = e => {
-    if (busy || speaking) return;
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      if (!WAKE.test(e.results[i][0].transcript)) continue;
-      stopWake();
-      chirpInit(); chirp(); eyes.pop();
-      const line = WAKE_LINES[Math.floor(Math.random() * WAKE_LINES.length)];
-      setTimeout(() => startMic(line), 350);
-      return;
-    }
-  };
-  r.onerror = e => {
-    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-      wakeBlocked = true;
-      status('Tap anywhere to enable "Hey Blink" speech recognition');
-    } else if (e.error !== 'no-speech' && e.error !== 'aborted') wakeFails++;
-  };
-  r.onend = () => {
-    wakeRec = null; earEl.hidden = true;
-    if (wakeFails > 5) { status('“Hey Blink” keeps stopping. Tap the mic instead.'); return; }
-    setTimeout(startWake, 300 + wakeFails * 1000);
-  };
-  try { r.start(); } catch { wakeRec = null; }
-}
-if (!SR) earEl.hidden = true;
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') resumeWake(); else stopWake(); });
-
-/* first touch unlocks sound, speech and mic on phones */
+/* first touch unlocks speech on phones */
 ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => {
   lastActive = Date.now();
   if (eyes.moodName === 'sleepy' && eyes.idleNap) eyes.clearMood(0);
-  chirpInit();
   if (!window.__unlocked) { window.__unlocked = true; if (voiceOn) unlockTTS(); }
-  if (wakeBlocked) { wakeBlocked = false; wakeFails = 0; }
-  resumeWake();
 }));
 
 /* ---------- Input ---------- */
