@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0E1633">
-<title>Blink — ask your files</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='28' fill='%230E1633'/><rect x='20' y='28' width='22' height='44' rx='8' fill='%237CF3E4'/><rect x='58' y='28' width='22' height='44' rx='8' fill='%237CF3E4'/></svg>">
+<title>Blink</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='28' fill='%230E1633'/><rect x='20' y='22' width='22' height='40' rx='8' fill='%237CF3E4'/><rect x='58' y='22' width='22' height='40' rx='8' fill='%237CF3E4'/><path d='M36 74q14 10 28 0' stroke='%237CF3E4' stroke-width='6' fill='none' stroke-linecap='round'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Unbounded:wght@600&display=swap" rel="stylesheet">
 <style>
 :root{
   --paper:#E9E6F3; --ink:#1E1B33; --muted:#5E5A78; --line:#CFCAE3;
-  --screen:#0E1633; --rim:#1B2550; --glow:#7CF3E4; --pink:#FF5FA2;
+  --screen:#0E1633; --rim:#1B2550; --glow:#7CF3E4; --pink:#FF5FA2; --red:#FF3B5C;
   --bubble:#FFFFFF; --mine:#1E1B33; --mine-ink:#F4F2FB;
 }
 @media (prefers-color-scheme:dark){
@@ -21,14 +21,16 @@
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
 body{background:var(--paper);color:var(--ink);font:16px/1.5 "Atkinson Hyperlegible",system-ui,-apple-system,sans-serif;-webkit-tap-highlight-color:transparent}
-button,select,textarea{font:inherit;color:inherit}
+button,textarea{font:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--pink);outline-offset:2px}
+[hidden]{display:none!important}
 .app{height:100dvh;display:grid;grid-template-rows:auto 1fr auto;max-width:720px;margin:0 auto}
 
-/* Face */
-.face{position:relative;margin:max(10px,env(safe-area-inset-top)) 12px 0;height:min(38dvh,300px);min-height:190px;background:var(--screen);border-radius:36px;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:inset 0 0 0 6px var(--rim),inset 0 0 70px #000b;touch-action:manipulation}
-.eyes{display:flex;gap:min(14vw,92px);margin-top:-18px;transform:translate(var(--lx,0px),var(--ly,0px));transition:transform .28s cubic-bezier(.3,.7,.3,1)}
-.eye{width:min(20vw,96px);height:min(25vw,120px);background:var(--glow);border-radius:30%;box-shadow:0 0 18px #7CF3E4aa,0 0 56px #7CF3E450;transform:scale(var(--sx,1),calc(var(--sy,1) * var(--b,1)));transition:transform .14s ease,border-radius .3s ease}
+/* ---------- Face ---------- */
+.face{position:relative;margin:max(10px,env(safe-area-inset-top)) 12px 0;height:min(40dvh,320px);min-height:210px;background:var(--screen);border-radius:36px;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:inset 0 0 0 6px var(--rim),inset 0 0 70px #000b;touch-action:manipulation;transition:box-shadow .3s}
+.head{display:flex;flex-direction:column;align-items:center;gap:min(4vw,22px);margin-top:-22px;transform:translate(var(--lx,0px),var(--ly,0px));transition:transform .28s cubic-bezier(.3,.7,.3,1)}
+.eyes{display:flex;gap:min(14vw,92px)}
+.eye{position:relative;display:grid;place-items:center;width:min(19vw,92px);height:min(23vw,112px);background:var(--glow);border-radius:30%;box-shadow:0 0 18px #7CF3E4aa,0 0 56px #7CF3E450;transform:scale(var(--sx,1),calc(var(--sy,1) * var(--b,1)));transition:transform .14s ease,border-radius .3s ease,background .3s,box-shadow .3s}
 .face.blink .eye{--b:.07}
 .face.pop .eye{--sx:1.08}
 .face[data-state=sleep] .eye{--sy:.08}
@@ -39,8 +41,9 @@ button,select,textarea{font:inherit;color:inherit}
 .face[data-state=happy] .eye{--sy:.55;border-radius:50% 50% 14% 14% / 80% 80% 14% 14%}
 .face[data-state=listening] .eye{--sy:1.08}
 .face[data-state=sad] .eye{--sy:.6;border-radius:14% 14% 50% 50% / 14% 14% 80% 80%}
-.eye{position:relative;display:grid;place-items:center}
-.emo{font-size:min(15vw,76px);line-height:1;opacity:0;transform:scale(.3);transition:opacity .2s ease,transform .3s cubic-bezier(.3,1.6,.5,1);filter:drop-shadow(0 0 10px #ffffff66);pointer-events:none}
+
+/* emoji eyes */
+.emo{font-size:min(14vw,72px);line-height:1;opacity:0;transform:scale(.3);transition:opacity .2s ease,transform .3s cubic-bezier(.3,1.6,.5,1);filter:drop-shadow(0 0 10px #ffffff66);pointer-events:none}
 .face.mood .eye{--sy:1;background:transparent;box-shadow:none;border-radius:30%}
 .face.mood .emo{opacity:1;transform:scale(1)}
 .face.mood-love .emo{animation:beat .9s ease-in-out infinite}
@@ -51,10 +54,31 @@ button,select,textarea{font:inherit;color:inherit}
 .face.mood-sleepy .emo{animation:drift 2.4s ease-in-out infinite}
 .face.mood-worried .emo,.face.mood-sad .emo{animation:droop 2s ease-in-out infinite}
 .face.mood-confused .emo{animation:tilt 1.4s ease-in-out infinite}
-.face.red .eye{--sy:.62;background:#FF3B5C;box-shadow:0 0 18px #FF3B5Caa,0 0 60px #FF3B5C66;border-radius:18% 18% 48% 48%}
+
+/* red teased eyes */
+.face.red{box-shadow:inset 0 0 0 6px #5A1830,inset 0 0 70px #000b}
+.face.red .eye{--sy:.62;background:var(--red);box-shadow:0 0 18px #FF3B5Caa,0 0 60px #FF3B5C66;border-radius:18% 18% 48% 48%}
 .face.red .eye.l{rotate:14deg}
 .face.red .eye.r{rotate:-14deg}
-.face.red{box-shadow:inset 0 0 0 6px #5A1830,inset 0 0 70px #000b}
+
+/* ---------- Mouth ---------- */
+.mouth{--mc:var(--glow);width:min(13vw,62px);height:min(3.6vw,18px);border:0 solid var(--mc);border-bottom-width:5px;border-radius:0 0 50% 50% / 0 0 100% 100%;background:transparent;filter:drop-shadow(0 0 6px var(--mc));transition:width .18s ease,height .12s ease,border-radius .2s ease,background .2s,border-color .3s,translate .25s,rotate .25s}
+.face[data-state=sleep] .mouth,.face[data-state=loading] .mouth,.face[data-state=reading] .mouth{width:26px;height:0;border-radius:4px}
+.face[data-state=thinking] .mouth{width:22px;height:0;border-radius:4px;translate:16px 0}
+.face[data-state=listening] .mouth{width:18px;height:18px;border-width:4px;border-radius:50%}
+.face[data-state=happy] .mouth{width:min(16vw,76px);height:min(5vw,24px)}
+.face[data-state=sad] .mouth{border-bottom-width:0;border-top-width:5px;height:14px;border-radius:50% 50% 0 0 / 100% 100% 0 0;translate:0 6px}
+.face.mood-love .mouth,.face.mood-shine .mouth,.face.mood-cool .mouth{width:min(16vw,76px);height:min(5vw,24px);border-bottom-width:5px;border-top-width:0;border-radius:0 0 50% 50% / 0 0 100% 100%}
+.face.mood-laughing .mouth{width:min(15vw,70px);height:min(6vw,28px);border-width:0;background:var(--mc);border-radius:0 0 50% 50% / 0 0 100% 100%;animation:bounce .45s ease-in-out infinite}
+.face.mood-sad .mouth,.face.mood-worried .mouth{width:min(11vw,52px);height:14px;border-bottom-width:0;border-top-width:5px;border-radius:50% 50% 0 0 / 100% 100% 0 0;translate:0 6px}
+.face.mood-angry .mouth{width:40px;height:10px;border-bottom-width:0;border-top-width:6px;border-radius:50% 50% 0 0 / 100% 100% 0 0}
+.face.mood-scared .mouth{width:24px;height:30px;border-width:0;background:var(--mc);border-radius:50%;animation:shake .25s linear infinite}
+.face.mood-stressed .mouth{width:40px;height:0;border-radius:4px;animation:wobble .8s ease-in-out infinite}
+.face.mood-sleepy .mouth{width:14px;height:14px;border-width:4px;border-radius:50%;animation:drift 2.4s ease-in-out infinite}
+.face.mood-confused .mouth{width:34px;height:0;border-radius:4px;rotate:14deg}
+.face.red .mouth{--mc:var(--red);width:46px;height:14px;border-top-width:0;border-bottom-width:5px;border-radius:0 0 50% 50% / 0 0 100% 100%;background:transparent;rotate:-14deg;translate:10px 0;animation:none}
+.face.speak .head .mouth{width:min(11vw,50px);height:var(--mo,8px);border-width:0;background:var(--mc);border-radius:45%;rotate:0deg;translate:0 0;animation:none;transition:height .08s ease}
+
 @keyframes beat{0%,100%{transform:scale(1)}30%{transform:scale(1.22)}45%{transform:scale(.95)}60%{transform:scale(1.12)}}
 @keyframes twinkle{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.18) rotate(18deg)}}
 @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10%)}}
@@ -63,14 +87,14 @@ button,select,textarea{font:inherit;color:inherit}
 @keyframes drift{0%,100%{transform:translateY(4%) scale(.96)}50%{transform:translateY(-4%) scale(1.04)}}
 @keyframes droop{0%,100%{transform:translateY(0)}50%{transform:translateY(8%)}}
 @keyframes tilt{0%,100%{transform:rotate(-15deg)}50%{transform:rotate(15deg)}}
-.status{position:absolute;left:18px;right:18px;bottom:16px;margin:0;color:#BFD9E8;font-size:14px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bar{position:absolute;left:0;bottom:0;height:4px;width:0;background:var(--pink);transition:width .2s}
-.wake{position:absolute;bottom:44px;border:0;border-radius:999px;padding:10px 20px;background:var(--glow);color:var(--screen);font-weight:700;cursor:pointer}
+
+.status{position:absolute;left:18px;right:18px;bottom:14px;margin:0;color:#BFD9E8;font-size:14px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.retry{position:absolute;top:10px;left:50%;translate:-50% 0;border:0;border-radius:999px;padding:7px 16px;background:var(--glow);color:var(--screen);font-weight:700;font-size:14px;cursor:pointer}
+.face:has(.retry:not([hidden])) .ear{display:none}
 .ear{position:absolute;top:14px;right:18px;margin:0;padding:3px 10px;border-radius:999px;background:#FF5FA233;color:#FFB3D2;font-size:13px}
-.ear[hidden]{display:none}
 .name{position:absolute;top:16px;left:22px;margin:0;font:600 15px/1 Unbounded,system-ui,sans-serif;color:#5C6BA8;letter-spacing:.02em}
 
-/* Chat */
+/* ---------- Chat ---------- */
 .log{overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:10px;overscroll-behavior:contain}
 .empty{margin:auto;max-width:34ch;text-align:center;color:var(--muted)}
 .msg{max-width:86%;padding:10px 14px;border-radius:20px;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -78,33 +102,35 @@ button,select,textarea{font:inherit;color:inherit}
 .bot{background:var(--bubble);border:1px solid var(--line);border-bottom-left-radius:6px}
 .src{display:block;margin-top:6px;font-size:13px;color:var(--muted)}
 
-/* Dock */
-.dock{padding:8px 12px max(10px,env(safe-area-inset-bottom));border-top:1px solid var(--line)}
-.files{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+/* ---------- Dock ---------- */
+.dock{padding:8px 12px max(10px,env(safe-area-inset-bottom));border-top:1px solid var(--line);display:grid;gap:8px}
+.files{display:flex;flex-wrap:wrap;gap:6px}
 .files:empty{display:none}
 .chip{display:inline-flex;align-items:center;gap:4px;max-width:100%;padding:3px 4px 3px 10px;border-radius:999px;background:var(--bubble);border:1px solid var(--line);font-size:13px}
 .chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chip button{border:0;background:none;width:24px;height:24px;border-radius:50%;cursor:pointer;color:var(--muted)}
-.row{display:flex;align-items:flex-end;gap:8px}
-.icon{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--bubble);display:grid;place-items:center;cursor:pointer}
+textarea{width:100%;min-height:44px;max-height:140px;resize:none;padding:10px 14px;border-radius:22px;border:1px solid var(--line);background:var(--bubble);font-size:16px;line-height:1.4}
+.tools{display:flex;align-items:center;gap:8px}
+.spacer{flex:1}
+.icon{position:relative;flex:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--bubble);display:grid;place-items:center;cursor:pointer;padding:0}
 .icon svg{width:22px;height:22px}
-textarea{flex:1;min-height:44px;max-height:140px;resize:none;padding:10px 14px;border-radius:22px;border:1px solid var(--line);background:var(--bubble);font-size:16px;line-height:1.4}
+.brain-btn{font-size:21px;line-height:1}
 .send{background:var(--pink);border-color:var(--pink);color:#fff}
 .send:disabled{opacity:.4;cursor:default}
 .mic.on{background:var(--pink);border-color:var(--pink);color:#fff;animation:ping 1.2s ease-out infinite}
+.speaker .off{display:none}
+.speaker[aria-pressed=false] .on{display:none}
+.speaker[aria-pressed=false] .off{display:block}
+.speaker[aria-pressed=false]{color:var(--muted)}
 @keyframes ping{0%{box-shadow:0 0 0 0 #FF5FA299}100%{box-shadow:0 0 0 14px #FF5FA200}}
-details{margin-top:8px;font-size:14px;color:var(--muted)}
-summary{cursor:pointer;padding:4px 0;width:max-content}
-.opts{display:grid;gap:10px;padding:8px 0 4px}
-.opts label{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--ink)}
-.opts select{max-width:62%;padding:6px 8px;border-radius:10px;border:1px solid var(--line);background:var(--bubble)}
-.opts input[type=checkbox]{width:20px;height:20px;accent-color:var(--pink)}
-.opts input[type=url],.opts input[type=text]{width:62%;padding:6px 8px;border-radius:10px;border:1px solid var(--line);background:var(--bubble);font-size:16px}
-.opts [hidden]{display:none}
-.diag{margin:0;font-size:13px;white-space:pre-line;color:var(--muted)}
-.link{border:0;background:none;padding:0;color:var(--pink);cursor:pointer;justify-self:start}
+.brain-wrap{position:relative}
+.menu{position:absolute;bottom:52px;left:0;min-width:250px;white-space:nowrap;padding:6px;border-radius:16px;background:var(--bubble);border:1px solid var(--line);box-shadow:0 10px 30px #0003;z-index:5}
+.menu button{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:10px 12px;border:0;border-radius:10px;background:none;text-align:left;cursor:pointer}
+.menu button[aria-checked=true]{background:#FF5FA222;font-weight:700}
+.menu button:disabled{opacity:.45;cursor:default}
+.menu small{color:var(--muted);font-weight:400}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-@media (prefers-reduced-motion:reduce){.eyes,.eye,.bar{transition:none}.mic.on,.face .emo{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.head,.eye,.mouth{transition:none}.mic.on,.face .emo,.face .mouth{animation:none!important}}
 </style>
 </head>
 <body>
@@ -112,25 +138,36 @@ summary{cursor:pointer;padding:4px 0;width:max-content}
   <section class="face" id="face" data-state="sleep" aria-label="Blink">
     <p class="name">Blink</p>
     <p class="ear" id="ear" hidden>Say “Hey Blink”</p>
-    <div class="eyes" id="eyes"><div class="eye l"><span class="emo"></span></div><div class="eye r"><span class="emo"></span></div></div>
-    <button class="wake" id="wake">Wake Blink</button>
-    <p class="status" id="status" role="status">Asleep. The first wake-up downloads the model once.</p>
-    <div class="bar" id="bar"></div>
+    <div class="head" id="head">
+      <div class="eyes"><div class="eye l"><span class="emo"></span></div><div class="eye r"><span class="emo"></span></div></div>
+      <div class="mouth" id="mouth"></div>
+    </div>
+    <button class="retry" id="retry" hidden>Try again</button>
+    <p class="status" id="status" role="status">Waking up…</p>
   </section>
 
   <main class="log" id="log">
-    <p class="empty" id="empty">Add a PDF, Word or text file, then ask about it. Everything runs on this phone.</p>
+    <p class="empty" id="empty">Say “Hey Blink”, tap the mic, or add a file and ask me about it.</p>
   </main>
 
   <footer class="dock">
     <div class="files" id="files"></div>
-    <div class="row">
+    <textarea id="q" rows="1" placeholder="Ask me anything" enterkeyhint="send"></textarea>
+    <div class="tools">
       <label class="icon" title="Add files">
         <input id="picker" class="sr" type="file" multiple accept=".pdf,.docx,.txt,.md,.csv,.json,.html,.htm">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.5l-8.4 8.4a5.5 5.5 0 01-7.8-7.8l8.9-8.9a3.7 3.7 0 015.2 5.2l-8.9 8.9a1.8 1.8 0 01-2.6-2.6L15.6 7.5"/></svg>
         <span class="sr">Add files</span>
       </label>
-      <textarea id="q" rows="1" placeholder="Ask about your files" enterkeyhint="send"></textarea>
+      <div class="brain-wrap">
+        <button class="icon brain-btn" id="brainBtn" aria-haspopup="true" aria-expanded="false" aria-label="Choose brain"><span id="brainIcon" aria-hidden="true">🧠</span></button>
+        <div class="menu" id="brainMenu" role="menu" hidden></div>
+      </div>
+      <button class="icon speaker" id="speakBtn" aria-pressed="true" aria-label="Voice on">
+        <svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12"/></svg>
+        <svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
+      </button>
+      <span class="spacer"></span>
       <button class="icon mic" id="mic" aria-label="Speak your question" aria-pressed="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>
       </button>
@@ -138,47 +175,46 @@ summary{cursor:pointer;padding:4px 0;width:max-content}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
       </button>
     </div>
-    <details>
-      <summary>Settings</summary>
-      <div class="opts">
-        <label>Run on <select id="mode"><option value="phone">This phone</option><option value="pc">My PC (Ollama)</option></select></label>
-        <label id="phoneModel">Brain <select id="model"></select></label>
-        <label id="pcUrlRow" hidden>PC link <input id="pcUrl" type="url" placeholder="https://….trycloudflare.com" autocomplete="off"></label>
-        <label id="pcModelRow" hidden>Brain <select id="pcModel"></select></label>
-        <button class="link" id="connect" hidden>Connect to PC</button>
-        <label>Speak answers <input type="checkbox" id="speak"></label>
-        <label>Wake word “Hey Blink” <input type="checkbox" id="wake-word"></label>
-        <label>Funny personality <input type="checkbox" id="fun"></label>
-        <button class="link" id="clear">Clear chat</button>
-        <p class="diag" id="diag">Checking this phone…</p>
-      </div>
-    </details>
   </footer>
 </div>
 
 <script type="module">
-const WEBLLM = "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.85/+esm";
-let webllm = null;
-
+/* ---------- Config ---------- */
+const PC_URL = (new URLSearchParams(location.search).get('pc') || 'https://desktop-46ll2mn.tail71f5fd.ts.net').replace(/\/+$/, '');
+const PC_TIERS = [
+  ['qwen3.5:4b', '⚡', 'Super fastest'],
+  ['qwen3.5:9b', '🏃', 'Faster'],
+  ['qwen3.6:latest', '🧠', 'Smartest (but slow)']
+];
 const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
 const PDFJS_WORKER = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
 const MAMMOTH = "https://cdn.jsdelivr.net/npm/mammoth@1.12.3/mammoth.browser.min.js";
 
 const $ = s => document.querySelector(s);
-const face = $('#face'), eyesEl = $('#eyes'), statusEl = $('#status'), bar = $('#bar');
-const logEl = $('#log'), qEl = $('#q'), sendBtn = $('#send'), wakeBtn = $('#wake');
-const modelSel = $('#model'), speakBox = $('#speak');
+const face = $('#face'), headEl = $('#head'), mouthEl = $('#mouth'), statusEl = $('#status');
+const logEl = $('#log'), qEl = $('#q'), sendBtn = $('#send'), retryBtn = $('#retry');
+const micBtn = $('#mic'), speakBtn = $('#speakBtn'), earEl = $('#ear');
+const brainBtn = $('#brainBtn'), brainMenu = $('#brainMenu'), brainIcon = $('#brainIcon');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const store = {
   get(k){ try { return localStorage.getItem(k); } catch { return null; } },
-  set(k,v){ try { localStorage.setItem(k,v); } catch {} }
+  set(k, v){ try { localStorage.setItem(k, v); } catch {} }
 };
 const status = t => statusEl.textContent = t;
 
-/* ---------- Eyes ---------- */
+let busy = false, warming = false, pcReady = false, speaking = false, listening = false, micBusy = false, fromVoice = false;
+let installed = [];
+let pcModel = store.get('blink-pc-model') || '';
+if (pcModel && !pcModel.includes(':')) pcModel += ':latest';
+if (!PC_TIERS.some(t => t[0] === pcModel)) pcModel = 'qwen3.6:latest';
+const tier = id => PC_TIERS.find(t => t[0] === id) || PC_TIERS[2];
+const tierLabel = id => tier(id)[1] + ' ' + tier(id)[2];
+
+/* ---------- Eyes & mouth ---------- */
+const MOODS = { love: '❤️', shine: '✨', laughing: '😂', angry: '😠', scared: '😱', worried: '😟', stressed: '😵‍💫', sleepy: '😴', sad: '😢', confused: '❓', cool: '😎' };
 const eyes = {
-  state: 'sleep', timer: 0, lastPointer: 0, lastPop: 0,
+  state: 'sleep', timer: 0, lastPointer: 0, lastPop: 0, moodName: '', moodTimer: 0, idleNap: false, flapTimer: 0,
   set(s){
     this.state = s; face.dataset.state = s;
     clearInterval(this.timer); this.timer = 0;
@@ -190,7 +226,7 @@ const eyes = {
     else if (s === 'listening') this.look(0, -4);
     else this.look(0, 0);
   },
-  look(x, y){ eyesEl.style.setProperty('--lx', x + 'px'); eyesEl.style.setProperty('--ly', y + 'px'); },
+  look(x, y){ headEl.style.setProperty('--lx', x + 'px'); headEl.style.setProperty('--ly', y + 'px'); },
   sweep(x, y, ms){
     this.look(-x, y);
     if (calm) return;
@@ -203,9 +239,24 @@ const eyes = {
     if (calm || now - this.lastPop < 110) return;
     this.lastPop = now;
     face.classList.add('pop'); setTimeout(() => face.classList.remove('pop'), 90);
+    if (!speaking) this.mumble();
+  },
+  mumble(){
+    this.flap();
+    face.classList.add('speak');
+    clearTimeout(this.mumbleOff);
+    this.mumbleOff = setTimeout(() => { if (!speaking) face.classList.remove('speak'); }, 160);
+  },
+  flap(){ mouthEl.style.setProperty('--mo', Math.round(4 + Math.random() * 22) + 'px'); },
+  talk(on){
+    clearInterval(this.flapTimer);
+    if (on) {
+      face.classList.add('speak');
+      if (!calm) this.flapTimer = setInterval(() => this.flap(), 120);
+      this.flap();
+    } else face.classList.remove('speak');
   },
   flash(s, ms){ this.set(s); setTimeout(() => { if (this.state === s) this.set('idle'); }, ms); },
-  moodName: '', moodTimer: 0,
   mood(name){
     if (name !== 'teased' && !MOODS[name]) return;
     this.clearMood(0);
@@ -220,38 +271,14 @@ const eyes = {
     clearTimeout(this.moodTimer);
     const off = () => {
       [...face.classList].filter(c => c === 'mood' || c === 'red' || c.startsWith('mood-')).forEach(c => face.classList.remove(c));
-      this.moodName = '';
+      this.moodName = ''; this.idleNap = false;
     };
     if (ms <= 0) off(); else this.moodTimer = setTimeout(off, ms);
   }
 };
-const MOODS = { love: '❤️', shine: '✨', laughing: '😂', angry: '😠', scared: '😱', worried: '😟', stressed: '😵‍💫', sleepy: '😴', sad: '😢', confused: '❓', cool: '😎' };
-const MOOD_RULES = [
-  ['teased', /\b(stupid|dumb|idiot|useless|ugly|loser|shut up|you suck|trash|noob|dummy|hate you|toaster|lame)\b|โง่|ไร้สาระ/i],
-  ['love', /\b(love you|i love|cute|adorable|thank(s| you)|good (bot|robot|job)|you'?re (the )?(best|awesome|amazing|smart|great))\b|รัก|น่ารัก|ขอบคุณ/i],
-  ['scared', /\b(ghost|scary|horror|monster|zombie|spider|laser cutter)\b|ผี/i],
-  ['stressed', /\b(exam|deadline|homework|assignment|stress(ed)?|quiz|due (today|tomorrow))\b|สอบ|การบ้าน/i],
-  ['sleepy', /\b(sleep(y)?|tired|bed ?time|good ?night|nap|bored|yawn)\b|ง่วง/i],
-  ['laughing', /\b(joke|funny|lol|haha+|meme|make me laugh)\b|555|ตลก/i],
-  ['angry', /\b(fight|angry|mad at)\b/i],
-  ['worried', /\b(broken|broke|fire|smoke|burn(ing)?|injur(ed|y)|hurt|emergency|stuck|jammed)\b/i],
-  ['sad', /\b(sad|cry(ing)?|lonely|miss you)\b|เศร้า/i],
-  ['cool', /\b(robot|cnc|arduino|3d print(er|ing)?)\b/i],
-  ['shine', /\b(wow|amazing|awesome)\b/i],
-  ['confused', /\?\?|\bhuh\b/i]
-];
-const guessMood = q => (MOOD_RULES.find(([, re]) => re.test(q)) || [])[0] || '';
-let lastActive = Date.now();
-['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => {
-  lastActive = Date.now();
-  if (eyes.moodName === 'sleepy' && eyes.idleNap) { eyes.idleNap = false; eyes.clearMood(0); }
-}));
-setInterval(() => {
-  if (eyes.state === 'idle' && !eyes.moodName && !busy && Date.now() - lastActive > 60000) { eyes.mood('sleepy'); eyes.idleNap = true; }
-}, 5000);
 
 (function blinkLoop(){
-  if (!calm && !['sleep','happy','sad'].includes(eyes.state)) eyes.blink();
+  if (!calm && !['sleep', 'happy', 'sad'].includes(eyes.state)) eyes.blink();
   setTimeout(blinkLoop, 2500 + Math.random() * 3500);
 })();
 (function glanceLoop(){
@@ -268,122 +295,105 @@ addEventListener('pointermove', e => {
   eyes.look(Math.round(Math.max(-1, Math.min(1, dx)) * 30), Math.round(Math.max(-1, Math.min(1, dy)) * 18));
 });
 face.addEventListener('click', e => {
-  if (e.target === wakeBtn || eyes.state !== 'idle' || (eyes.moodName && !eyes.idleNap)) return;
-  eyes.idleNap = false;
+  if (e.target === retryBtn || eyes.state !== 'idle' || (eyes.moodName && !eyes.idleNap)) return;
   eyes.mood(['love', 'shine', 'laughing', 'cool'][Math.floor(Math.random() * 4)]);
   eyes.clearMood(1400);
 });
 
-/* ---------- Models ---------- */
-const CHOICES = [
-  ['Qwen3-0.6B', '⚡ Super fastest'],
-  ['Llama-3.2-1B-Instruct', '🏃 Faster'],
-  ['Qwen3-1.7B', '🧠 Smartest (but slow)']
+const MOOD_RULES = [
+  ['teased', /\b(stupid|dumb|idiot|useless|ugly|loser|shut up|you suck|trash|noob|dummy|hate you|toaster|lame)\b|โง่|ไร้สาระ/i],
+  ['love', /\b(love you|i love|cute|adorable|thank(s| you)|good (bot|robot|job)|you'?re (the )?(best|awesome|amazing|smart|great))\b|รัก|น่ารัก|ขอบคุณ/i],
+  ['scared', /\b(ghost|scary|horror|monster|zombie|spider|laser cutter)\b|ผี/i],
+  ['stressed', /\b(exam|deadline|homework|assignment|stress(ed)?|quiz|due (today|tomorrow))\b|สอบ|การบ้าน/i],
+  ['sleepy', /\b(sleep(y)?|tired|bed ?time|good ?night|nap|bored|yawn)\b|ง่วง/i],
+  ['laughing', /\b(joke|funny|lol|haha+|meme|make me laugh)\b|555|ตลก/i],
+  ['angry', /\b(fight|angry|mad at)\b/i],
+  ['worried', /\b(broken|broke|fire|smoke|burn(ing)?|injur(ed|y)|hurt|emergency|stuck|jammed)\b/i],
+  ['sad', /\b(sad|cry(ing)?|lonely|miss you)\b|เศร้า/i],
+  ['cool', /\b(robot|cnc|arduino|3d print(er|ing)?)\b/i],
+  ['shine', /\b(wow|amazing|awesome)\b/i],
+  ['confused', /\?\?|\bhuh\b/i]
 ];
-const PC_TIERS = [
-  ['qwen3.5:4b', '⚡ Super fastest'],
-  ['qwen3.5:9b', '🏃 Faster'],
-  ['qwen3.6:latest', '🧠 Smartest (but slow)']
-];
-const tierName = id => (PC_TIERS.find(t => t[0] === id) || [, id])[1];
-let engine = null, loadedId = null, busy = false, loading = false, loadErr = '';
-let mode = store.get('blink-mode') === 'pc' ? 'pc' : 'phone';
-let pcUrl = store.get('blink-pc-url') || '', pcReady = false;
-let pcModel = store.get('blink-pc-model') || '';
-if (!pcModel.includes(':') && pcModel) pcModel += ':latest';
-if (!PC_TIERS.some(t => t[0] === pcModel)) pcModel = 'qwen3.6:latest';
-const ready = () => mode === 'pc' ? pcReady : !!engine;
-addEventListener('unhandledrejection', e => { if (loading) loadErr = 'Error: ' + (e.reason?.message || e.reason); });
-addEventListener('error', e => { if (loading) loadErr = 'Error: ' + e.message; });
-const cacheBackend = store.get('blink-cache') === 'indexeddb' ? 'indexeddb' : 'cache';
+const guessMood = q => (MOOD_RULES.find(([, re]) => re.test(q)) || [])[0] || '';
 
-async function setupModels(){
-  if (mode === 'pc' && pcUrl) wake();
-  try { webllm = await import(WEBLLM); }
-  catch {
-    if (mode === 'pc') return;
-    eyes.set('sad'); wakeBtn.hidden = true;
-    status('AI engine did not load. Open this page from an https:// link with internet on.');
-    return;
-  }
-  let f16 = false, a = null;
-  if (navigator.gpu) {
-    try { a = await navigator.gpu.requestAdapter(); f16 = !!a?.features.has('shader-f16'); } catch {}
-  }
-  const d = [];
-  const mb = n => Math.round(n / 1048576) + ' MB';
-  if (!navigator.gpu) d.push('GPU: no WebGPU');
-  else if (!a) d.push('GPU: WebGPU on, but no GPU adapter');
-  else {
-    d.push('GPU: ' + ([a.info?.vendor, a.info?.architecture, a.info?.description].filter(Boolean).join(' ') || 'unknown'));
-    d.push('f16: ' + (f16 ? 'yes' : 'no'));
-    d.push('Max buffer: ' + mb(a.limits.maxBufferSize) + ' · max storage binding: ' + mb(a.limits.maxStorageBufferBindingSize));
-  }
-  try { const e = await navigator.storage.estimate(); d.push('Storage free: ' + mb(e.quota - e.usage)); } catch {}
-  d.push('RAM: ' + (navigator.deviceMemory ? navigator.deviceMemory + ' GB' : 'unknown') + ' · cache: ' + cacheBackend);
-  d.push(navigator.userAgent);
-  $('#diag').textContent = d.join('\n');
-  const quant = f16 ? 'q4f16_1' : 'q4f32_1';
-  const list = webllm.prebuiltAppConfig.model_list;
-  for (const [base, label] of CHOICES) {
-    const id = `${base}-${quant}-MLC`;
-    const rec = list.find(m => m.model_id === id);
-    if (!rec) continue;
-    modelSel.add(new Option(label, id));
-  }
-  const saved = store.get('blink-model');
-  if (mode === 'phone' && saved && [...modelSel.options].some(o => o.value === saved)) {
-    modelSel.value = saved;
-    wake();
-  }
+let lastActive = Date.now();
+setInterval(() => {
+  if (eyes.state === 'idle' && !eyes.moodName && !busy && !listening && Date.now() - lastActive > 60000) { eyes.mood('sleepy'); eyes.idleNap = true; }
+}, 5000);
+
+/* ---------- PC connection ---------- */
+function renderBrain(){
+  brainIcon.textContent = tier(pcModel)[1];
+  brainBtn.setAttribute('aria-label', 'Brain: ' + tier(pcModel)[2]);
+  brainMenu.replaceChildren(...PC_TIERS.map(([id, icon, label]) => {
+    const b = document.createElement('button');
+    const missing = installed.length && !installed.includes(id);
+    b.setAttribute('role', 'menuitemradio');
+    b.setAttribute('aria-checked', String(id === pcModel));
+    b.disabled = !!missing;
+    b.innerHTML = '<span></span><small></small>';
+    b.firstChild.textContent = `${icon} ${label}`;
+    b.lastChild.textContent = missing ? 'not on PC' : (id === pcModel ? '✓' : '');
+    b.onclick = () => {
+      closeBrain();
+      if (id === pcModel) return;
+      if (busy) { status('Let me finish first, then switch my brain.'); return; }
+      pcModel = id; store.set('blink-pc-model', id); renderBrain();
+      pcReady = false; connectPC();
+    };
+    return b;
+  }));
 }
+function closeBrain(){ brainMenu.hidden = true; brainBtn.setAttribute('aria-expanded', 'false'); }
+brainBtn.onclick = e => {
+  e.stopPropagation();
+  const open = brainMenu.hidden;
+  brainMenu.hidden = !open;
+  brainBtn.setAttribute('aria-expanded', String(open));
+};
+document.addEventListener('click', e => { if (!brainMenu.hidden && !e.target.closest('.brain-wrap')) closeBrain(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeBrain(); });
 
 async function connectPC(){
-  if (!pcUrl) { status('Enter your PC link in Settings, then tap Connect to PC.'); document.querySelector('details').open = true; return; }
-  busy = true; updateSend();
-  wakeBtn.hidden = true;
-  eyes.set('loading'); status('Connecting to your PC');
+  if (busy && !warming) return;
+  busy = true; warming = true; updateSend();
+  retryBtn.hidden = true;
+  eyes.clearMood(0); eyes.set('loading'); status('Connecting to my brain…');
   try {
-    const r = await fetch(pcUrl + '/api/tags', { signal: AbortSignal.timeout(10000) });
+    const r = await fetch(PC_URL + '/api/tags', { signal: AbortSignal.timeout(10000) });
     if (!r.ok) throw new Error('HTTP ' + r.status);
-    const names = ((await r.json()).models || []).map(m => m.name);
-    [...pcModelEl.options].forEach(o => {
-      const has = names.includes(o.value);
-      o.disabled = !has;
-      o.textContent = tierName(o.value) + (has ? '' : ' (not on PC)');
-    });
-    if (!names.includes(pcModel)) {
-      const alt = PC_TIERS.find(t => names.includes(t[0]));
-      if (alt) { pcModel = alt[0]; pcModelEl.value = pcModel; store.set('blink-pc-model', pcModel); }
+    installed = ((await r.json()).models || []).map(m => m.name);
+    if (!installed.includes(pcModel)) {
+      const alt = [...PC_TIERS].reverse().find(t => installed.includes(t[0]));
+      if (alt) { pcModel = alt[0]; store.set('blink-pc-model', pcModel); }
     }
-    if (!names.includes(pcModel)) {
-      eyes.set('sad'); wakeBtn.hidden = false;
-      status(`No Blink brain on the PC yet. Run: ollama pull ${pcModel}`);
-    } else {
-      loading = true; updateSend();
-      status(`Warming up ${tierName(pcModel)}…`);
-      const w = await fetch(pcUrl + '/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: pcModel }) });
-      if (!w.ok) throw new Error((await w.text()) || 'HTTP ' + w.status);
-      pcReady = true;
-      status(`Awake · ${tierName(pcModel)}`);
-      eyes.flash('happy', 1200);
-    }
+    renderBrain();
+    if (!installed.includes(pcModel)) throw new Error('NO_MODEL');
+    status(`Warming up ${tierLabel(pcModel)}…`);
+    const w = await fetch(PC_URL + '/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: pcModel }) });
+    if (!w.ok) throw new Error((await w.text()) || 'HTTP ' + w.status);
+    pcReady = true;
+    status(`Awake · ${tierLabel(pcModel)}`);
+    eyes.flash('happy', 1200);
   } catch (e) {
-    eyes.set('sad'); wakeBtn.hidden = false;
-    const why = /HTTP 403/.test(e.message) ? 'blocked by OLLAMA_ORIGINS'
-              : /HTTP 5\d\d/.test(e.message) ? 'tunnel cannot reach Ollama'
-              : e.name === 'TimeoutError' ? 'timed out'
-              : 'no response (' + e.message + ')';
-    status('Cannot reach your PC: ' + why + '.');
+    pcReady = false;
+    eyes.set('sad'); retryBtn.hidden = false;
+    const m = e.message || '';
+    status(m === 'NO_MODEL' ? 'No brain installed on the PC yet.'
+      : /HTTP 403/.test(m) ? 'My brain is blocking this site (check OLLAMA_ORIGINS / OLLAMA_HOST).'
+      : /HTTP 5\d\d/.test(m) ? 'Tailscale reached the PC, but Ollama is not answering.'
+      : e.name === 'TimeoutError' || e.name === 'TypeError' ? 'Cannot reach my brain. Is Tailscale on and the PC running?'
+      : 'Brain error: ' + m);
   }
-  busy = false; loading = false; updateSend();
+  busy = false; warming = false; updateSend();
   resumeWake();
 }
+retryBtn.onclick = connectPC;
 
-async function* pcStream(messages){
+async function* chatStream(messages){
   const body = { model: pcModel, messages, stream: true, think: false,
-    options: { temperature: 0.7, top_p: 0.8, presence_penalty: 0.5, num_predict: 512 } };
-  const post = () => fetch(pcUrl + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    options: { temperature: 0.8, top_p: 0.8, presence_penalty: 0.5, num_predict: 512 } };
+  const post = () => fetch(PC_URL + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   let res = await post();
   if (!res.ok) {
     const t = await res.text();
@@ -410,77 +420,7 @@ async function* pcStream(messages){
   }
 }
 
-async function* chatStream(messages){
-  if (mode === 'pc') { yield* pcStream(messages); return; }
-  const stream = await engine.chat.completions.create({
-    messages, stream: true, temperature: 0.7, top_p: 0.8, presence_penalty: 0.5, max_tokens: 512,
-    extra_body: { enable_thinking: false }
-  });
-  for await (const ch of stream) {
-    const d = ch.choices[0]?.delta?.content || '';
-    if (d) yield d;
-  }
-}
-
-async function wake(){
-  if (busy) return;
-  if (mode === 'pc') return connectPC();
-  if (!webllm) return;
-  if (!navigator.gpu) {
-    eyes.set('sad');
-    status('No WebGPU here. Use recent Chrome on Android or Safari on iOS 26+, over HTTPS.');
-    return;
-  }
-  busy = true; loading = true; updateSend();
-  wakeBtn.hidden = true;
-  eyes.set('loading');
-  const id = modelSel.value;
-  const t0 = Date.now();
-  let last = t0, label = 'Downloading model 0%';
-  loadErr = '';
-  const tick = setInterval(() => {
-    status(`${label} · ${Math.round((Date.now() - t0) / 1000)}s · keep this screen open`);
-    if (loadErr || Date.now() - last > 180000) {
-      clearInterval(tick);
-      eyes.set('sad');
-      status(loadErr || 'Download looks stuck. Tap Try again.');
-      wakeBtn.textContent = 'Try again';
-      wakeBtn.onclick = () => { store.set('blink-cache', cacheBackend === 'cache' ? 'indexeddb' : 'cache'); location.reload(); };
-      wakeBtn.hidden = false;
-    }
-  }, 1000);
-  try {
-    const onProg = r => {
-      last = Date.now();
-      label = r.progress < 1 ? `Downloading model ${Math.round(r.progress * 100)}%` : 'Preparing on GPU';
-      bar.style.width = (r.progress * 100).toFixed(1) + '%';
-    };
-    if (!engine) engine = await webllm.CreateMLCEngine(id, {
-      appConfig: { ...webllm.prebuiltAppConfig, cacheBackend },
-      initProgressCallback: onProg
-    });
-    else await engine.reload(id);
-    clearInterval(tick);
-    wakeBtn.hidden = true; wakeBtn.textContent = 'Wake Blink'; wakeBtn.onclick = wake;
-    loadedId = id;
-    store.set('blink-model', id);
-    bar.style.width = '0';
-    status('Awake. Ask me anything.');
-    eyes.flash('happy', 1200);
-  } catch (e) {
-    clearInterval(tick);
-    bar.style.width = '0';
-    eyes.set('sad');
-    status('Model failed to load: ' + (e.message || e));
-    wakeBtn.hidden = false;
-  }
-  busy = false; loading = false; updateSend();
-  resumeWake();
-}
-wakeBtn.onclick = wake;
-modelSel.onchange = () => { if (engine) wake(); };
-
-/* ---------- Documents & retrieval ---------- */
+/* ---------- Documents & retrieval (BM25) ---------- */
 const seg = Intl.Segmenter ? new Intl.Segmenter(undefined, { granularity: 'word' }) : null;
 const STOP = new Set('a an and are as at be by for from has have how i in is it its of on or that the this to was were what when where which who why will with you your do does did can about into than then there these those not no'.split(' '));
 function toks(s){
@@ -511,7 +451,6 @@ function chunk(text, src, size = 700, overlap = 120){
   }
   return out;
 }
-
 let docs = [], chunks = [], df = new Map(), avgdl = 1;
 function rebuild(){
   chunks = docs.flatMap(d => d.chunks);
@@ -536,7 +475,6 @@ function retrieve(q, k = 4){
   }).filter(x => x[0] > 0).sort((a, b) => b[0] - a[0]).slice(0, k).map(x => x[1]);
   return hits.length ? hits : chunks.slice(0, 3);
 }
-
 const libs = {};
 function lib(url){
   return libs[url] ||= new Promise((res, rej) => {
@@ -569,13 +507,11 @@ async function readFile(f){
   if (ext === 'html' || ext === 'htm') txt = new DOMParser().parseFromString(txt, 'text/html').body.textContent || '';
   return chunk(txt, f.name);
 }
-
 $('#picker').onchange = async e => {
   const files = [...e.target.files];
   e.target.value = '';
   if (!files.length) return;
-  const prev = eyes.state;
-  eyes.set('reading');
+  eyes.clearMood(0); eyes.set('reading');
   let ok = 0;
   for (const f of files) {
     status(`Reading ${f.name}`);
@@ -590,14 +526,12 @@ $('#picker').onchange = async e => {
     }
   }
   rebuild(); renderFiles();
-  if (ok) { status(`Read ${ok} file${ok > 1 ? 's' : ''}. Ask away.`); eyes.flash('happy', 1000); }
+  if (ok) { status(`Read ${ok} file${ok > 1 ? 's' : ''}. Ask away!`); eyes.flash('happy', 1000); }
   else eyes.flash('sad', 1500);
-  if (prev === 'sleep' && !ready()) setTimeout(() => { if (!ready() && eyes.state === 'idle') eyes.set('sleep'); }, 1100);
+  if (!pcReady) setTimeout(() => { if (!pcReady && eyes.state === 'idle') eyes.set('sad'); }, 1100);
 };
-
 function renderFiles(){
-  const box = $('#files');
-  box.replaceChildren(...docs.map(d => {
+  $('#files').replaceChildren(...docs.map(d => {
     const el = document.createElement('div');
     el.className = 'chip';
     el.innerHTML = '<span></span><button aria-label="Remove file">✕</button>';
@@ -609,13 +543,13 @@ function renderFiles(){
 }
 
 /* ---------- Chat ---------- */
-const FUN = 'Personality: you are Blink, a tiny, overly dramatic robot with two big glowing eyes who lives in a maker lab. You adore 3D printers, are secretly scared of the laser cutter, think you are a genius, and refer to humans as "my favorite carbon-based friends". Add one short quirky, funny remark to each answer, then give the real answer. Jokes must never replace or change the facts. Your replies are read aloud, so use plain sentences with no emojis, lists or markdown. ';
-const PLAIN = 'You are Blink, a friendly assistant on a phone. Your replies may be read aloud, so avoid emojis and markdown. ';
-const SYS_DOCS_TASK = 'If the file excerpts the user provides answer the question, answer from them and mention the source name in square brackets. If they do not, ignore the excerpts and answer from your general knowledge, starting with "(general knowledge)". Be short and clear. Always give a real answer.';
-const SYS_CHAT_TASK = 'Answer every question directly in 1 to 3 sentences using your general knowledge. Always give a real answer.';
-const funBox = $('#fun');
+const PERSONA = 'You are Blink, a tiny, overly dramatic robot with two big glowing eyes who lives in a maker lab. You adore 3D printers, are secretly scared of the laser cutter, think you are a genius, and refer to humans as "my favorite carbon-based friends". Add one short quirky, funny remark to each answer, then give the real answer. Jokes must never replace or change the facts. Your replies are read aloud, so use plain sentences with no emojis, lists or markdown. ';
+const DOCS_TASK = 'If the file excerpts the user provides answer the question, answer from them and mention the source name in square brackets. If they do not, ignore the excerpts and answer from your general knowledge, starting with "(general knowledge)". Be short and clear. Always give a real answer.';
+const CHAT_TASK = 'Answer every question directly in 1 to 3 sentences using your general knowledge. Always give a real answer.';
 const MOOD_TASK = ' Start every reply with a mood tag in exactly this form: <mood>NAME</mood>, where NAME is one of: happy, love, shine, laughing, cool, teased, angry, scared, worried, stressed, sleepy, sad, confused. Use teased when the user is teasing, insulting or joking about you, and then answer with playful sass while staying kind.';
-const sysPrompt = docs => (funBox.checked ? FUN : PLAIN) + (docs ? SYS_DOCS_TASK : SYS_CHAT_TASK) + MOOD_TASK;
+const sysPrompt = hasDocs => PERSONA + (hasDocs ? DOCS_TASK : CHAT_TASK) + MOOD_TASK;
+const NOPE = /not sure|don't know|do not know|can't help|cannot help/i;
+const clean = s => s.replace(/<think>[\s\S]*?(<\/think>|$)/g, '').replace(/\*\*/g, '').trim();
 const MOOD_RE = /^[<\[]\s*mood\s*[:>]\s*([a-z]+)\s*(?:<\/mood>|\])?\s*/i;
 function splitMood(raw){
   const t = clean(raw);
@@ -625,7 +559,6 @@ function splitMood(raw){
   return { mood: null, text: t };
 }
 let history = [];
-const NOPE = /not sure|don't know|do not know|can't help|cannot help/i;
 
 function addMsg(who, text){
   $('#empty')?.remove();
@@ -636,18 +569,18 @@ function addMsg(who, text){
   logEl.scrollTop = logEl.scrollHeight;
   return el;
 }
-const clean = s => s.replace(/<think>[\s\S]*?(<\/think>|$)/g, '').replace(/\*\*/g, '').trim();
-
-function updateSend(){ sendBtn.disabled = !qEl.value.trim() || (busy && !loading); }
+function updateSend(){ sendBtn.disabled = !qEl.value.trim() || (busy && !warming); }
 
 async function ask(){
   const spoken = fromVoice; fromVoice = false;
   const q = qEl.value.trim();
-  if (q && loading) { status(mode === 'pc' ? 'Still warming up. Send again when the eyes wake up.' : 'Still downloading the model. Send again when the eyes wake up.'); eyes.blink(); return; }
-  if (!q || busy) return;
-  if (!ready()) { status(mode === 'pc' ? 'Connect to your PC first.' : 'Wake Blink first.'); eyes.blink(); wakeBtn.focus(); return; }
+  if (!q) return;
+  if (warming) { status('Still warming up. Send again when my eyes open.'); eyes.blink(); return; }
+  if (busy) return;
+  if (!pcReady) { status('My brain is offline. Tap Try again.'); eyes.blink(); return; }
   busy = true; qEl.value = ''; autosize(); updateSend();
-  speechSynthesis?.cancel();
+  lastActive = Date.now();
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
   addMsg('me', q);
   eyes.clearMood(0);
   const guess = guessMood(q);
@@ -678,19 +611,23 @@ async function ask(){
       if (first) { eyes.set('talking'); status('Answering'); first = false; }
       out += d;
       const p = splitMood(out);
-      if (p.mood && !moodSet) { moodSet = true; eyes.mood(p.mood === 'happy' ? '' : p.mood); if (p.mood === 'happy' && eyes.moodName) eyes.clearMood(0); }
+      if (p.mood && !moodSet) {
+        moodSet = true;
+        if (p.mood === 'happy') eyes.clearMood(0); else eyes.mood(p.mood);
+      }
       bubble.textContent = p.text;
       eyes.pop();
       logEl.scrollTop = logEl.scrollHeight;
     }
   } catch (e) {
     bubble.textContent = 'Something went wrong: ' + (e.message || e);
-    eyes.clearMood(0); eyes.flash('sad', 2000); status(mode === 'pc' ? 'Check that the PC and tunnel are still running.' : 'Try again, or pick a lighter model in Settings.');
+    eyes.clearMood(0); eyes.flash('sad', 2000);
+    status('Check that the PC and Tailscale are still running.');
     history.pop(); busy = false; updateSend();
     resumeWake();
     return;
   }
-
+  eyes.talk(false);
   out = splitMood(out).text.trim() || '(no answer)';
   bubble.textContent = out;
   history.push({ role: 'assistant', content: out });
@@ -701,27 +638,41 @@ async function ask(){
     bubble.appendChild(s);
   }
   logEl.scrollTop = logEl.scrollHeight;
-  status('Awake. Ask me anything.');
+  status(`Awake · ${tierLabel(pcModel)}`);
   busy = false; updateSend();
+  lastActive = Date.now();
 
-  if ((spoken || speakBox.checked) && 'speechSynthesis' in window) say(out);
+  if (voiceOn && 'speechSynthesis' in window) say(out);
   else { eyes.flash('happy', 900); eyes.clearMood(3500); }
 }
 
-let speaking = false;
+/* ---------- Voice output ---------- */
+let voiceOn = store.get('blink-voice') !== '0';
+const unlockTTS = () => { if ('speechSynthesis' in window) speechSynthesis.speak(new SpeechSynthesisUtterance('')); };
+function renderSpeaker(){
+  speakBtn.setAttribute('aria-pressed', String(voiceOn));
+  speakBtn.setAttribute('aria-label', voiceOn ? 'Voice on' : 'Voice off');
+}
+speakBtn.onclick = () => {
+  voiceOn = !voiceOn; store.set('blink-voice', voiceOn ? '1' : '0'); renderSpeaker();
+  if (voiceOn) unlockTTS();
+  else if ('speechSynthesis' in window) speechSynthesis.cancel();
+};
 function say(text){
   stopWake();
   speaking = true;
-  const u = new SpeechSynthesisUtterance(text.replace(/\[[^\]]*\]/g, ''));
+  const u = new SpeechSynthesisUtterance(text.replace(/\[[^\]]*\]/g, '').replace(/\(general knowledge\)/i, ''));
   if (/[\u0E00-\u0E7F]/.test(text)) u.lang = 'th-TH';
   u.rate = 1.05;
-  u.pitch = funBox.checked ? 1.35 : 1;
-  u.onstart = () => eyes.set('talking');
-  u.onboundary = () => eyes.pop();
+  u.pitch = 1.35;
+  u.onstart = () => { eyes.set('talking'); eyes.talk(true); };
+  u.onboundary = () => { eyes.pop(); eyes.flap(); };
   u.onend = u.onerror = () => {
     speaking = false;
+    eyes.talk(false);
     if (eyes.state === 'talking') eyes.flash('happy', 800);
     eyes.clearMood(1500);
+    lastActive = Date.now();
     resumeWake();
   };
   speechSynthesis.speak(u);
@@ -729,13 +680,11 @@ function say(text){
 
 /* ---------- Microphone ---------- */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-const micBtn = $('#mic');
-let rec = null, listening = false, fromVoice = false;
-const unlockTTS = () => { if ('speechSynthesis' in window) speechSynthesis.speak(new SpeechSynthesisUtterance('')); };
+let rec = null;
 if (!SR) micBtn.hidden = true;
 micBtn.onclick = () => { if (listening) rec.stop(); else startMic(); };
 function startMic(greeting){
-  if (listening || busy) return;
+  if (!SR || listening || busy) return;
   micBusy = true; stopWake(); chirpInit();
   if ('speechSynthesis' in window) speechSynthesis.cancel();
   unlockTTS();
@@ -744,7 +693,7 @@ function startMic(greeting){
   rec.interimResults = true;
   rec.continuous = false;
   rec.onstart = () => {
-    listening = true;
+    listening = true; lastActive = Date.now();
     micBtn.classList.add('on'); micBtn.setAttribute('aria-pressed', 'true');
     eyes.clearMood(0); eyes.set('listening'); status(greeting || 'Listening');
   };
@@ -755,25 +704,28 @@ function startMic(greeting){
   };
   rec.onerror = e => {
     status(e.error === 'not-allowed' ? 'Microphone blocked. Allow it in your browser settings.'
-         : e.error === 'no-speech' ? 'Heard nothing. Tap the mic and try again.'
+         : e.error === 'no-speech' ? 'I heard nothing. Say “Hey Blink” or tap the mic.'
          : 'Mic error: ' + e.error);
   };
   rec.onend = () => {
     listening = false;
     micBtn.classList.remove('on'); micBtn.setAttribute('aria-pressed', 'false');
-    if (eyes.state === 'listening') eyes.set(ready() ? 'idle' : 'sleep');
+    if (eyes.state === 'listening') eyes.set(pcReady ? 'idle' : 'sad');
     micBusy = false;
     if (qEl.value.trim()) submitVoice();
     else resumeWake();
   };
   try { rec.start(); } catch (err) { micBusy = false; status('Mic error: ' + (err.message || err)); resumeWake(); }
 }
+function submitVoice(){
+  fromVoice = true;
+  ask().finally(() => { if (!speaking) resumeWake(); });
+}
 
 /* ---------- Wake word ---------- */
 const WAKE = /(?:hey|hi|hay|okay|ok|yo)[\s,.!]*(?:blink|blinks|blank|bling|plink|link|blinky)\b|เฮ้\s*(?:บลิ้ง|บลิงค์|บลิ๊ง|บลิงก์)/i;
 const WAKE_LINES = ['Ears on!', 'You rang?', 'Blink is listening. Dramatically.', 'Yes, my favorite carbon-based friend?', 'Beep boop, go!'];
-const wakeBox = $('#wake-word'), earEl = $('#ear');
-let wakeRec = null, micBusy = false, wakeFails = 0, audioCtx = null;
+let wakeRec = null, wakeFails = 0, audioCtx = null, wakeBlocked = false;
 
 function chirpInit(){ try { audioCtx ||= new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch {} }
 function chirp(){
@@ -789,8 +741,7 @@ function chirp(){
     o.start(t + i * 0.09); o.stop(t + i * 0.09 + 0.1);
   });
 }
-const wakeAllowed = () => SR && wakeBox.checked && !busy && !micBusy && !listening && !speaking && document.visibilityState === 'visible';
-
+const wakeAllowed = () => SR && !wakeBlocked && !busy && !micBusy && !listening && !speaking && document.visibilityState === 'visible';
 function stopWake(){
   if (!wakeRec) return;
   const r = wakeRec; wakeRec = null;
@@ -799,12 +750,6 @@ function stopWake(){
   earEl.hidden = true;
 }
 function resumeWake(){ setTimeout(startWake, 500); }
-
-function submitVoice(){
-  fromVoice = true;
-  ask().finally(() => { if (!speaking) resumeWake(); });
-}
-
 function startWake(){
   if (wakeRec || !wakeAllowed()) return;
   const r = new SR();
@@ -826,8 +771,8 @@ function startWake(){
   };
   r.onerror = e => {
     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-      wakeBox.checked = false; store.set('blink-wake', '0');
-      status('Microphone blocked. Allow it in your browser settings to use “Hey Blink”.');
+      wakeBlocked = true;
+      status('Tap anywhere, then allow the microphone so I can hear “Hey Blink”.');
     } else if (e.error !== 'no-speech' && e.error !== 'aborted') wakeFails++;
   };
   r.onend = () => {
@@ -837,64 +782,32 @@ function startWake(){
   };
   try { r.start(); } catch { wakeRec = null; }
 }
-
-wakeBox.checked = store.get('blink-wake') === '1';
-if (!SR) wakeBox.closest('label').hidden = true;
-wakeBox.onchange = () => {
-  store.set('blink-wake', wakeBox.checked ? '1' : '0');
-  if (wakeBox.checked) { chirpInit(); unlockTTS(); wakeFails = 0; startWake(); }
-  else stopWake();
-};
+if (!SR) earEl.hidden = true;
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') resumeWake(); else stopWake(); });
-funBox.checked = store.get('blink-fun') !== '0';
-funBox.onchange = () => store.set('blink-fun', funBox.checked ? '1' : '0');
 
+/* first touch unlocks sound, speech and mic on phones */
+['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => {
+  lastActive = Date.now();
+  if (eyes.moodName === 'sleepy' && eyes.idleNap) eyes.clearMood(0);
+  chirpInit();
+  if (!window.__unlocked) { window.__unlocked = true; if (voiceOn) unlockTTS(); }
+  if (wakeBlocked) { wakeBlocked = false; wakeFails = 0; }
+  resumeWake();
+}));
+
+/* ---------- Input ---------- */
 function autosize(){ qEl.style.height = 'auto'; qEl.style.height = Math.min(qEl.scrollHeight, 140) + 'px'; }
 qEl.addEventListener('input', () => { autosize(); updateSend(); });
 qEl.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); ask(); }
 });
 sendBtn.onclick = ask;
-speakBox.checked = store.get('blink-speak') === '1';
-speakBox.onchange = () => { store.set('blink-speak', speakBox.checked ? '1' : '0'); if (speakBox.checked) unlockTTS(); };
-$('#clear').onclick = () => {
-  history = []; speechSynthesis?.cancel();
-  logEl.innerHTML = '<p class="empty" id="empty">Chat cleared. Your files are still loaded.</p>';
-};
 
-const modeSel = $('#mode'), pcUrlEl = $('#pcUrl'), pcModelEl = $('#pcModel');
-function showMode(){
-  const pc = mode === 'pc';
-  $('#phoneModel').hidden = pc;
-  $('#pcUrlRow').hidden = $('#pcModelRow').hidden = $('#connect').hidden = !pc;
-}
-PC_TIERS.forEach(([id, label]) => pcModelEl.add(new Option(label, id)));
-modeSel.value = mode; pcUrlEl.value = pcUrl; pcModelEl.value = pcModel; showMode();
-pcModelEl.onchange = () => {
-  pcModel = pcModelEl.value; store.set('blink-pc-model', pcModel);
-  if (pcReady) { pcReady = false; connectPC(); }
-};
-if (mode === 'pc' && !pcUrl) status('Enter your PC link in Settings, then tap Connect to PC.');
-modeSel.onchange = () => {
-  mode = modeSel.value; store.set('blink-mode', mode); showMode();
-  pcReady = false;
-  if (ready()) { eyes.set('idle'); wakeBtn.hidden = true; status('Awake. Ask me anything.'); }
-  else {
-    eyes.set('sleep'); wakeBtn.hidden = false;
-    status(mode === 'pc' ? 'Enter your PC link, then tap Connect to PC.' : 'Asleep. The first wake-up downloads the model once.');
-  }
-};
-$('#connect').onclick = () => {
-  pcUrl = pcUrlEl.value.trim().replace(/\/+$/, '');
-  pcModel = pcModelEl.value;
-  store.set('blink-pc-url', pcUrl); store.set('blink-pc-model', pcModel);
-  pcReady = false;
-  connectPC();
-};
-
+/* ---------- Start ---------- */
+renderBrain();
+renderSpeaker();
 eyes.set('sleep');
-setupModels();
-resumeWake();
+connectPC();
 </script>
 </body>
 </html>
