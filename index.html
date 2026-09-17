@@ -39,6 +39,30 @@ button,select,textarea{font:inherit;color:inherit}
 .face[data-state=happy] .eye{--sy:.55;border-radius:50% 50% 14% 14% / 80% 80% 14% 14%}
 .face[data-state=listening] .eye{--sy:1.08}
 .face[data-state=sad] .eye{--sy:.6;border-radius:14% 14% 50% 50% / 14% 14% 80% 80%}
+.eye{position:relative;display:grid;place-items:center}
+.emo{font-size:min(15vw,76px);line-height:1;opacity:0;transform:scale(.3);transition:opacity .2s ease,transform .3s cubic-bezier(.3,1.6,.5,1);filter:drop-shadow(0 0 10px #ffffff66);pointer-events:none}
+.face.mood .eye{--sy:1;background:transparent;box-shadow:none;border-radius:30%}
+.face.mood .emo{opacity:1;transform:scale(1)}
+.face.mood-love .emo{animation:beat .9s ease-in-out infinite}
+.face.mood-shine .emo{animation:twinkle 1.2s ease-in-out infinite}
+.face.mood-laughing .emo{animation:bounce .45s ease-in-out infinite}
+.face.mood-angry .emo,.face.mood-scared .emo{animation:shake .25s linear infinite}
+.face.mood-stressed .emo{animation:wobble 1s ease-in-out infinite}
+.face.mood-sleepy .emo{animation:drift 2.4s ease-in-out infinite}
+.face.mood-worried .emo,.face.mood-sad .emo{animation:droop 2s ease-in-out infinite}
+.face.mood-confused .emo{animation:tilt 1.4s ease-in-out infinite}
+.face.red .eye{--sy:.62;background:#FF3B5C;box-shadow:0 0 18px #FF3B5Caa,0 0 60px #FF3B5C66;border-radius:18% 18% 48% 48%}
+.face.red .eye.l{rotate:14deg}
+.face.red .eye.r{rotate:-14deg}
+.face.red{box-shadow:inset 0 0 0 6px #5A1830,inset 0 0 70px #000b}
+@keyframes beat{0%,100%{transform:scale(1)}30%{transform:scale(1.22)}45%{transform:scale(.95)}60%{transform:scale(1.12)}}
+@keyframes twinkle{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.18) rotate(18deg)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10%)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6%)}75%{transform:translateX(6%)}}
+@keyframes wobble{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(12deg)}}
+@keyframes drift{0%,100%{transform:translateY(4%) scale(.96)}50%{transform:translateY(-4%) scale(1.04)}}
+@keyframes droop{0%,100%{transform:translateY(0)}50%{transform:translateY(8%)}}
+@keyframes tilt{0%,100%{transform:rotate(-15deg)}50%{transform:rotate(15deg)}}
 .status{position:absolute;left:18px;right:18px;bottom:16px;margin:0;color:#BFD9E8;font-size:14px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bar{position:absolute;left:0;bottom:0;height:4px;width:0;background:var(--pink);transition:width .2s}
 .wake{position:absolute;bottom:44px;border:0;border-radius:999px;padding:10px 20px;background:var(--glow);color:var(--screen);font-weight:700;cursor:pointer}
@@ -80,7 +104,7 @@ summary{cursor:pointer;padding:4px 0;width:max-content}
 .diag{margin:0;font-size:13px;white-space:pre-line;color:var(--muted)}
 .link{border:0;background:none;padding:0;color:var(--pink);cursor:pointer;justify-self:start}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-@media (prefers-reduced-motion:reduce){.eyes,.eye,.bar{transition:none}.mic.on{animation:none}}
+@media (prefers-reduced-motion:reduce){.eyes,.eye,.bar{transition:none}.mic.on,.face .emo{animation:none!important}}
 </style>
 </head>
 <body>
@@ -88,7 +112,7 @@ summary{cursor:pointer;padding:4px 0;width:max-content}
   <section class="face" id="face" data-state="sleep" aria-label="Blink">
     <p class="name">Blink</p>
     <p class="ear" id="ear" hidden>Say “Hey Blink”</p>
-    <div class="eyes" id="eyes"><div class="eye l"></div><div class="eye r"></div></div>
+    <div class="eyes" id="eyes"><div class="eye l"><span class="emo"></span></div><div class="eye r"><span class="emo"></span></div></div>
     <button class="wake" id="wake">Wake Blink</button>
     <p class="status" id="status" role="status">Asleep. The first wake-up downloads the model once.</p>
     <div class="bar" id="bar"></div>
@@ -118,9 +142,9 @@ summary{cursor:pointer;padding:4px 0;width:max-content}
       <summary>Settings</summary>
       <div class="opts">
         <label>Run on <select id="mode"><option value="phone">This phone</option><option value="pc">My PC (Ollama)</option></select></label>
-        <label id="phoneModel">Model <select id="model"></select></label>
+        <label id="phoneModel">Brain <select id="model"></select></label>
         <label id="pcUrlRow" hidden>PC link <input id="pcUrl" type="url" placeholder="https://….trycloudflare.com" autocomplete="off"></label>
-        <label id="pcModelRow" hidden>PC model <input id="pcModel" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+        <label id="pcModelRow" hidden>Brain <select id="pcModel"></select></label>
         <button class="link" id="connect" hidden>Connect to PC</button>
         <label>Speak answers <input type="checkbox" id="speak"></label>
         <label>Wake word “Hey Blink” <input type="checkbox" id="wake-word"></label>
@@ -180,8 +204,51 @@ const eyes = {
     this.lastPop = now;
     face.classList.add('pop'); setTimeout(() => face.classList.remove('pop'), 90);
   },
-  flash(s, ms){ this.set(s); setTimeout(() => { if (this.state === s) this.set('idle'); }, ms); }
+  flash(s, ms){ this.set(s); setTimeout(() => { if (this.state === s) this.set('idle'); }, ms); },
+  moodName: '', moodTimer: 0,
+  mood(name){
+    if (name !== 'teased' && !MOODS[name]) return;
+    this.clearMood(0);
+    this.moodName = name;
+    if (name === 'teased') face.classList.add('red');
+    else {
+      face.querySelectorAll('.emo').forEach(e => e.textContent = MOODS[name]);
+      face.classList.add('mood', 'mood-' + name);
+    }
+  },
+  clearMood(ms = 0){
+    clearTimeout(this.moodTimer);
+    const off = () => {
+      [...face.classList].filter(c => c === 'mood' || c === 'red' || c.startsWith('mood-')).forEach(c => face.classList.remove(c));
+      this.moodName = '';
+    };
+    if (ms <= 0) off(); else this.moodTimer = setTimeout(off, ms);
+  }
 };
+const MOODS = { love: '❤️', shine: '✨', laughing: '😂', angry: '😠', scared: '😱', worried: '😟', stressed: '😵‍💫', sleepy: '😴', sad: '😢', confused: '❓', cool: '😎' };
+const MOOD_RULES = [
+  ['teased', /\b(stupid|dumb|idiot|useless|ugly|loser|shut up|you suck|trash|noob|dummy|hate you|toaster|lame)\b|โง่|ไร้สาระ/i],
+  ['love', /\b(love you|i love|cute|adorable|thank(s| you)|good (bot|robot|job)|you'?re (the )?(best|awesome|amazing|smart|great))\b|รัก|น่ารัก|ขอบคุณ/i],
+  ['scared', /\b(ghost|scary|horror|monster|zombie|spider|laser cutter)\b|ผี/i],
+  ['stressed', /\b(exam|deadline|homework|assignment|stress(ed)?|quiz|due (today|tomorrow))\b|สอบ|การบ้าน/i],
+  ['sleepy', /\b(sleep(y)?|tired|bed ?time|good ?night|nap|bored|yawn)\b|ง่วง/i],
+  ['laughing', /\b(joke|funny|lol|haha+|meme|make me laugh)\b|555|ตลก/i],
+  ['angry', /\b(fight|angry|mad at)\b/i],
+  ['worried', /\b(broken|broke|fire|smoke|burn(ing)?|injur(ed|y)|hurt|emergency|stuck|jammed)\b/i],
+  ['sad', /\b(sad|cry(ing)?|lonely|miss you)\b|เศร้า/i],
+  ['cool', /\b(robot|cnc|arduino|3d print(er|ing)?)\b/i],
+  ['shine', /\b(wow|amazing|awesome)\b/i],
+  ['confused', /\?\?|\bhuh\b/i]
+];
+const guessMood = q => (MOOD_RULES.find(([, re]) => re.test(q)) || [])[0] || '';
+let lastActive = Date.now();
+['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => {
+  lastActive = Date.now();
+  if (eyes.moodName === 'sleepy' && eyes.idleNap) { eyes.idleNap = false; eyes.clearMood(0); }
+}));
+setInterval(() => {
+  if (eyes.state === 'idle' && !eyes.moodName && !busy && Date.now() - lastActive > 60000) { eyes.mood('sleepy'); eyes.idleNap = true; }
+}, 5000);
 
 (function blinkLoop(){
   if (!calm && !['sleep','happy','sad'].includes(eyes.state)) eyes.blink();
@@ -200,18 +267,31 @@ addEventListener('pointermove', e => {
   eyes.lastPointer = performance.now();
   eyes.look(Math.round(Math.max(-1, Math.min(1, dx)) * 30), Math.round(Math.max(-1, Math.min(1, dy)) * 18));
 });
-face.addEventListener('click', e => { if (e.target === wakeBtn) return; if (eyes.state === 'idle') eyes.flash('happy', 700); });
+face.addEventListener('click', e => {
+  if (e.target === wakeBtn || eyes.state !== 'idle' || (eyes.moodName && !eyes.idleNap)) return;
+  eyes.idleNap = false;
+  eyes.mood(['love', 'shine', 'laughing', 'cool'][Math.floor(Math.random() * 4)]);
+  eyes.clearMood(1400);
+});
 
 /* ---------- Models ---------- */
 const CHOICES = [
-  ['Qwen3-0.6B', 'Qwen3 0.6B (lightest)'],
-  ['Llama-3.2-1B-Instruct', 'Llama 3.2 1B'],
-  ['Qwen2.5-1.5B-Instruct', 'Qwen2.5 1.5B'],
-  ['Qwen3-1.7B', 'Qwen3 1.7B (best answers)']
+  ['Qwen3-0.6B', '⚡ Super fastest'],
+  ['Llama-3.2-1B-Instruct', '🏃 Faster'],
+  ['Qwen3-1.7B', '🧠 Smartest (but slow)']
 ];
+const PC_TIERS = [
+  ['qwen3.5:4b', '⚡ Super fastest'],
+  ['qwen3.5:9b', '🏃 Faster'],
+  ['qwen3.6:latest', '🧠 Smartest (but slow)']
+];
+const tierName = id => (PC_TIERS.find(t => t[0] === id) || [, id])[1];
 let engine = null, loadedId = null, busy = false, loading = false, loadErr = '';
 let mode = store.get('blink-mode') === 'pc' ? 'pc' : 'phone';
-let pcUrl = store.get('blink-pc-url') || '', pcModel = store.get('blink-pc-model') || 'qwen3:14b', pcReady = false;
+let pcUrl = store.get('blink-pc-url') || '', pcReady = false;
+let pcModel = store.get('blink-pc-model') || '';
+if (!pcModel.includes(':') && pcModel) pcModel += ':latest';
+if (!PC_TIERS.some(t => t[0] === pcModel)) pcModel = 'qwen3.6:latest';
 const ready = () => mode === 'pc' ? pcReady : !!engine;
 addEventListener('unhandledrejection', e => { if (loading) loadErr = 'Error: ' + (e.reason?.message || e.reason); });
 addEventListener('error', e => { if (loading) loadErr = 'Error: ' + e.message; });
@@ -249,8 +329,7 @@ async function setupModels(){
     const id = `${base}-${quant}-MLC`;
     const rec = list.find(m => m.model_id === id);
     if (!rec) continue;
-    const o = new Option(rec.vram_required_MB ? `${label} · ~${Math.round(rec.vram_required_MB)} MB` : label, id);
-    modelSel.add(o);
+    modelSel.add(new Option(label, id));
   }
   const saved = store.get('blink-model');
   if (mode === 'phone' && saved && [...modelSel.options].some(o => o.value === saved)) {
@@ -268,13 +347,25 @@ async function connectPC(){
     const r = await fetch(pcUrl + '/api/tags', { signal: AbortSignal.timeout(10000) });
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const names = ((await r.json()).models || []).map(m => m.name);
-    const want = pcModel.includes(':') ? pcModel : pcModel + ':latest';
-    if (!names.includes(want)) {
+    [...pcModelEl.options].forEach(o => {
+      const has = names.includes(o.value);
+      o.disabled = !has;
+      o.textContent = tierName(o.value) + (has ? '' : ' (not on PC)');
+    });
+    if (!names.includes(pcModel)) {
+      const alt = PC_TIERS.find(t => names.includes(t[0]));
+      if (alt) { pcModel = alt[0]; pcModelEl.value = pcModel; store.set('blink-pc-model', pcModel); }
+    }
+    if (!names.includes(pcModel)) {
       eyes.set('sad'); wakeBtn.hidden = false;
-      status(`${pcModel} is not on the PC. Run: ollama pull ${pcModel}`);
+      status(`No Blink brain on the PC yet. Run: ollama pull ${pcModel}`);
     } else {
+      loading = true; updateSend();
+      status(`Warming up ${tierName(pcModel)}…`);
+      const w = await fetch(pcUrl + '/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: pcModel }) });
+      if (!w.ok) throw new Error((await w.text()) || 'HTTP ' + w.status);
       pcReady = true;
-      status(`Connected to your PC · ${pcModel}`);
+      status(`Awake · ${tierName(pcModel)}`);
       eyes.flash('happy', 1200);
     }
   } catch (e) {
@@ -285,7 +376,7 @@ async function connectPC(){
               : 'no response (' + e.message + ')';
     status('Cannot reach your PC: ' + why + '.');
   }
-  busy = false; updateSend();
+  busy = false; loading = false; updateSend();
   resumeWake();
 }
 
@@ -523,7 +614,16 @@ const PLAIN = 'You are Blink, a friendly assistant on a phone. Your replies may 
 const SYS_DOCS_TASK = 'If the file excerpts the user provides answer the question, answer from them and mention the source name in square brackets. If they do not, ignore the excerpts and answer from your general knowledge, starting with "(general knowledge)". Be short and clear. Always give a real answer.';
 const SYS_CHAT_TASK = 'Answer every question directly in 1 to 3 sentences using your general knowledge. Always give a real answer.';
 const funBox = $('#fun');
-const sysPrompt = docs => (funBox.checked ? FUN : PLAIN) + (docs ? SYS_DOCS_TASK : SYS_CHAT_TASK);
+const MOOD_TASK = ' Start every reply with a mood tag in exactly this form: <mood>NAME</mood>, where NAME is one of: happy, love, shine, laughing, cool, teased, angry, scared, worried, stressed, sleepy, sad, confused. Use teased when the user is teasing, insulting or joking about you, and then answer with playful sass while staying kind.';
+const sysPrompt = docs => (funBox.checked ? FUN : PLAIN) + (docs ? SYS_DOCS_TASK : SYS_CHAT_TASK) + MOOD_TASK;
+const MOOD_RE = /^[<\[]\s*mood\s*[:>]\s*([a-z]+)\s*(?:<\/mood>|\])?\s*/i;
+function splitMood(raw){
+  const t = clean(raw);
+  const m = t.match(MOOD_RE);
+  if (m && (/<\/|\]/.test(m[0]) || t.length > m[0].length)) return { mood: m[1].toLowerCase(), text: t.slice(m[0].length) };
+  if (/^[<\[]/.test(t) && t.length < 30) return { mood: null, text: '' };
+  return { mood: null, text: t };
+}
 let history = [];
 const NOPE = /not sure|don't know|do not know|can't help|cannot help/i;
 
@@ -543,12 +643,15 @@ function updateSend(){ sendBtn.disabled = !qEl.value.trim() || (busy && !loading
 async function ask(){
   const spoken = fromVoice; fromVoice = false;
   const q = qEl.value.trim();
-  if (q && loading) { status('Still downloading the model. Send again when the eyes wake up.'); eyes.blink(); return; }
+  if (q && loading) { status(mode === 'pc' ? 'Still warming up. Send again when the eyes wake up.' : 'Still downloading the model. Send again when the eyes wake up.'); eyes.blink(); return; }
   if (!q || busy) return;
   if (!ready()) { status(mode === 'pc' ? 'Connect to your PC first.' : 'Wake Blink first.'); eyes.blink(); wakeBtn.focus(); return; }
   busy = true; qEl.value = ''; autosize(); updateSend();
   speechSynthesis?.cancel();
   addMsg('me', q);
+  eyes.clearMood(0);
+  const guess = guessMood(q);
+  if (guess) eyes.mood(guess);
 
   let ctx = '', srcs = [];
   if (chunks.length) {
@@ -570,23 +673,25 @@ async function ask(){
   const bubble = addMsg('bot', '');
   let out = '';
   try {
-    let first = true;
+    let first = true, moodSet = false;
     for await (const d of chatStream(messages)) {
       if (first) { eyes.set('talking'); status('Answering'); first = false; }
       out += d;
-      bubble.textContent = clean(out);
+      const p = splitMood(out);
+      if (p.mood && !moodSet) { moodSet = true; eyes.mood(p.mood === 'happy' ? '' : p.mood); if (p.mood === 'happy' && eyes.moodName) eyes.clearMood(0); }
+      bubble.textContent = p.text;
       eyes.pop();
       logEl.scrollTop = logEl.scrollHeight;
     }
   } catch (e) {
     bubble.textContent = 'Something went wrong: ' + (e.message || e);
-    eyes.flash('sad', 2000); status(mode === 'pc' ? 'Check that the PC and tunnel are still running.' : 'Try again, or pick a lighter model in Settings.');
+    eyes.clearMood(0); eyes.flash('sad', 2000); status(mode === 'pc' ? 'Check that the PC and tunnel are still running.' : 'Try again, or pick a lighter model in Settings.');
     history.pop(); busy = false; updateSend();
     resumeWake();
     return;
   }
 
-  out = clean(out) || '(no answer)';
+  out = splitMood(out).text.trim() || '(no answer)';
   bubble.textContent = out;
   history.push({ role: 'assistant', content: out });
   if (srcs.length) {
@@ -600,7 +705,7 @@ async function ask(){
   busy = false; updateSend();
 
   if ((spoken || speakBox.checked) && 'speechSynthesis' in window) say(out);
-  else eyes.flash('happy', 900);
+  else { eyes.flash('happy', 900); eyes.clearMood(3500); }
 }
 
 let speaking = false;
@@ -616,6 +721,7 @@ function say(text){
   u.onend = u.onerror = () => {
     speaking = false;
     if (eyes.state === 'talking') eyes.flash('happy', 800);
+    eyes.clearMood(1500);
     resumeWake();
   };
   speechSynthesis.speak(u);
@@ -640,7 +746,7 @@ function startMic(greeting){
   rec.onstart = () => {
     listening = true;
     micBtn.classList.add('on'); micBtn.setAttribute('aria-pressed', 'true');
-    eyes.set('listening'); status(greeting || 'Listening');
+    eyes.clearMood(0); eyes.set('listening'); status(greeting || 'Listening');
   };
   rec.onresult = e => {
     let text = '';
@@ -762,20 +868,25 @@ function showMode(){
   $('#phoneModel').hidden = pc;
   $('#pcUrlRow').hidden = $('#pcModelRow').hidden = $('#connect').hidden = !pc;
 }
+PC_TIERS.forEach(([id, label]) => pcModelEl.add(new Option(label, id)));
 modeSel.value = mode; pcUrlEl.value = pcUrl; pcModelEl.value = pcModel; showMode();
-if (mode === 'pc' && !pcUrl) status('Enter your PC link and model in Settings, then tap Connect to PC.');
+pcModelEl.onchange = () => {
+  pcModel = pcModelEl.value; store.set('blink-pc-model', pcModel);
+  if (pcReady) { pcReady = false; connectPC(); }
+};
+if (mode === 'pc' && !pcUrl) status('Enter your PC link in Settings, then tap Connect to PC.');
 modeSel.onchange = () => {
   mode = modeSel.value; store.set('blink-mode', mode); showMode();
   pcReady = false;
   if (ready()) { eyes.set('idle'); wakeBtn.hidden = true; status('Awake. Ask me anything.'); }
   else {
     eyes.set('sleep'); wakeBtn.hidden = false;
-    status(mode === 'pc' ? 'Enter your PC link and model, then tap Connect to PC.' : 'Asleep. The first wake-up downloads the model once.');
+    status(mode === 'pc' ? 'Enter your PC link, then tap Connect to PC.' : 'Asleep. The first wake-up downloads the model once.');
   }
 };
 $('#connect').onclick = () => {
   pcUrl = pcUrlEl.value.trim().replace(/\/+$/, '');
-  pcModel = pcModelEl.value.trim() || 'qwen3:14b';
+  pcModel = pcModelEl.value;
   store.set('blink-pc-url', pcUrl); store.set('blink-pc-model', pcModel);
   pcReady = false;
   connectPC();
