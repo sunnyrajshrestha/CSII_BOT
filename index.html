@@ -191,6 +191,15 @@ button,textarea{font:inherit;color:inherit}
 .me{margin-left:auto;background:var(--mine);color:var(--mine-ink);border-bottom-right-radius:6px}
 .bot{background:var(--bubble);border:1px solid var(--line);border-bottom-left-radius:6px}
 .src{display:block;margin-top:6px;font-size:13px;color:var(--muted)}
+.card{max-width:86%;padding:12px 14px;border-radius:20px;background:var(--bubble);border:1px solid var(--line)}
+.card h4{margin:0 0 8px;font:700 15px/1.2 inherit}
+.card dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0 0 10px;font-size:15px}
+.card dt{color:var(--muted)}
+.card dd{margin:0}
+.card .row{display:flex;gap:8px}
+.card button{flex:1;padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:none;cursor:pointer}
+.card .ok{background:var(--pink);border-color:var(--pink);color:#fff;font-weight:700}
+.card.done{opacity:.7}
 
 /* ---------- Dock ---------- */
 .dock{padding:8px 12px max(10px,env(safe-area-inset-bottom));border-top:1px solid var(--line);display:grid;gap:8px}
@@ -301,6 +310,8 @@ const PC_TIERS = [
   ['qwen3.5:9b', '🏃', 'Faster'],
   ['qwen3.6:latest', '🧠', 'Smartest (but slow)']
 ];
+const API = (new URLSearchParams(location.search).get('api') || 'https://desktop-46ll2mn.tail71f5fd.ts.net:8443').replace(/\/+$/, '');
+const RESOURCES = [['R01', 'laser cutter'], ['R02', '3D printer'], ['R03', 'CNC router'], ['R04', 'electronics station']];
 const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
 const PDFJS_WORKER = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
 const MAMMOTH = "https://cdn.jsdelivr.net/npm/mammoth@1.12.3/mammoth.browser.min.js";
@@ -676,6 +687,106 @@ function renderFiles(){
   qEl.placeholder = docs.length ? 'Ask about your files' : 'Ask me anything';
 }
 
+/* ---------- Bookings (Excel backend) ---------- */
+const BOOK_RE = /\b(book|booking|reserve|reservation|appointment|slot)\b|จอง/i;
+const STATUS_RE = /\b(B\d{3,4})\b/i;
+const FIELDS = [['student_id', 'Student ID'], ['student_name', 'Name'], ['resource_id', 'Machine'], ['date', 'Date'], ['start_time', 'From'], ['end_time', 'To'], ['purpose', 'Purpose']];
+const NEEDED = ['student_id', 'student_name', 'resource_id', 'date', 'start_time', 'end_time'];
+const resName = id => (RESOURCES.find(r => r[0] === id) || [, id])[1];
+let draft = null;
+
+async function extractBooking(q, prev){
+  const now = new Date();
+  const sys = `Today is ${now.toISOString().slice(0, 10)} (${now.toLocaleDateString('en-US', { weekday: 'long' })}) in Bangkok. `
+    + 'Pull booking details out of the user message. Machines: ' + RESOURCES.map(r => r[0] + ' = ' + r[1]).join(', ') + '. '
+    + 'Use 24-hour times like 14:00 and dates like 2026-09-19. Turn weekday names into the next matching date. '
+    + 'Leave a field as an empty string if the user did not say it. Do not invent anything. '
+    + 'Already known: ' + JSON.stringify(prev || {});
+  const r = await fetch(PC_URL + '/api/chat', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: pcModel, stream: false, think: false, options: { temperature: 0 },
+      messages: [{ role: 'system', content: sys }, { role: 'user', content: q }],
+      format: {
+        type: 'object',
+        properties: Object.fromEntries(FIELDS.map(([k]) => [k, { type: 'string' }])),
+        required: FIELDS.map(([k]) => k)
+      }
+    })
+  });
+  if (!r.ok) throw new Error((await r.text()) || 'HTTP ' + r.status);
+  const j = await r.json();
+  return JSON.parse(j.message.content);
+}
+
+function bookingCard(d){
+  $('#empty')?.remove();
+  const el = document.createElement('div');
+  el.className = 'card';
+  const dl = FIELDS.filter(([k]) => d[k]).map(([k, label]) =>
+    `<dt>${label}</dt><dd>${String(k === 'resource_id' ? resName(d[k]) : d[k]).replace(/[<>&]/g, '')}</dd>`).join('');
+  el.innerHTML = `<h4>Send this booking request?</h4><dl>${dl}</dl><div class="row"><button class="ok">Confirm</button><button class="no">Cancel</button></div>`;
+  logEl.appendChild(el);
+  logEl.scrollTop = logEl.scrollHeight;
+  el.querySelector('.no').onclick = () => { draft = null; el.classList.add('done'); el.querySelector('.row').remove(); addMsg('bot', 'Cancelled. Nothing was sent.'); };
+  el.querySelector('.ok').onclick = async () => {
+    el.querySelector('.row').remove(); el.classList.add('done');
+    eyes.set('thinking'); status('Sending your request…');
+    try {
+      const r = await fetch(API + '/booking', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.detail || 'HTTP ' + r.status);
+      draft = null;
+      const line = `Request ${j.booking_id} is in the book and waiting for Sunny to approve it. Ask me for the status any time.`;
+      addMsg('bot', line);
+      eyes.mood('cool'); eyes.clearMood(2500);
+      if (voiceOn) say(line); else eyes.flash('happy', 900);
+    } catch (e) {
+      const line = 'That did not go through: ' + (e.message || e);
+      addMsg('bot', line);
+      eyes.clearMood(0); eyes.flash('sad', 1600);
+      draft = null;
+    }
+    status(`Awake · ${tierLabel(pcModel)}`);
+  };
+}
+
+async function bookingTurn(q){
+  eyes.set('thinking'); status('Sorting out the booking');
+  let got;
+  try { got = await extractBooking(q, draft); }
+  catch (e) { addMsg('bot', 'I could not read those details: ' + (e.message || e)); draft = null; return; }
+  draft = { ...(draft || {}), ...Object.fromEntries(Object.entries(got).filter(([, v]) => v && String(v).trim())) };
+  const missing = NEEDED.filter(k => !draft[k]);
+  if (missing.length) {
+    const line = 'Almost there. I still need: ' + missing.map(k => FIELDS.find(f => f[0] === k)[1].toLowerCase()).join(', ') + '.';
+    addMsg('bot', line);
+    if (voiceOn) say(line);
+    return;
+  }
+  bookingCard(draft);
+}
+
+async function statusTurn(id){
+  eyes.set('thinking'); status('Checking the book');
+  try {
+    const r = await fetch(API + '/booking/' + id);
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.detail || 'HTTP ' + r.status);
+    const line = `Booking ${id.toUpperCase()} is ${j.status}${j.notes ? ' — ' + j.notes : ''}.`;
+    addMsg('bot', line);
+    if (voiceOn) say(line); else eyes.flash('happy', 900);
+  } catch (e) {
+    addMsg('bot', 'I could not find that booking: ' + (e.message || e));
+    eyes.flash('sad', 1500);
+  }
+}
+
+const logVisit = (q, intent) => fetch(API + '/visit', {
+  method: 'POST', headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ student_id: draft?.student_id || '', student_name: draft?.student_name || '', channel: 'blink', question: q.slice(0, 200), intent, action_taken: '', result: 'ok' })
+}).catch(() => {});
+
 /* ---------- Chat ---------- */
 const PERSONA = 'You are Blink, a tiny, overly dramatic robot with two big glowing eyes who lives in a maker lab. You adore 3D printers, are secretly scared of the laser cutter, think you are a genius, and refer to humans as "my favorite carbon-based friends". Add one short quirky, funny remark to each answer, then give the real answer. Jokes must never replace or change the facts. Your replies are read aloud, so use plain sentences with no emojis, lists or markdown. ';
 const DOCS_TASK = 'If the file excerpts the user provides answer the question, answer from them and mention the source name in square brackets. If they do not, ignore the excerpts and answer from your general knowledge, starting with "(general knowledge)". Be short and clear. Always give a real answer.';
@@ -719,6 +830,21 @@ async function ask(){
   eyes.clearMood(0);
   const guess = guessMood(q);
   if (guess) eyes.mood(guess);
+
+  const sid = q.match(STATUS_RE);
+  if (sid && /status|approve|pending|booking/i.test(q)) {
+    logVisit(q, 'status');
+    await statusTurn(sid[1]);
+    status(`Awake · ${tierLabel(pcModel)}`);
+    busy = false; updateSend(); return;
+  }
+  if (draft || BOOK_RE.test(q)) {
+    logVisit(q, 'booking');
+    await bookingTurn(q);
+    status(`Awake · ${tierLabel(pcModel)}`);
+    busy = false; updateSend(); return;
+  }
+  logVisit(q, chunks.length ? 'docs' : 'faq');
 
   let ctx = '', srcs = [];
   if (chunks.length) {
