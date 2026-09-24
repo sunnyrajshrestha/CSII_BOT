@@ -26,150 +26,107 @@ button,textarea{font:inherit;color:inherit}
 [hidden]{display:none!important}
 .app{height:100dvh;display:grid;grid-template-rows:auto 1fr auto;max-width:720px;margin:0 auto}
 
-/* ---------- Face ---------- */
-.face{position:relative;margin:max(10px,env(safe-area-inset-top)) 12px 0;height:min(40dvh,320px);min-height:210px;background:var(--screen);border-radius:36px;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:inset 0 0 0 6px var(--rim),inset 0 0 70px #000b;touch-action:manipulation;transition:box-shadow .3s}
-.head{display:flex;flex-direction:column;align-items:center;gap:min(4vw,22px);margin-top:-22px;transform:translate(var(--lx,0px),var(--ly,0px));transition:transform .28s cubic-bezier(.3,.7,.3,1)}
-.eyes{--ew:min(19vw,92px);--eh:min(23vw,112px);--bw:min(15vw,72px);position:relative;display:flex;gap:min(14vw,92px)}
-.eye{position:relative;display:grid;place-items:center;width:var(--ew);height:var(--eh);background:var(--glow);border-radius:30%;box-shadow:0 0 18px #7CF3E4aa,0 0 56px #7CF3E450;transform:scale(var(--sx,1),calc(var(--sy,1) * var(--b,1)));transition:transform .14s ease,border-radius .3s ease,background .3s,box-shadow .3s}
-.face.blink .eye{--b:.07}
-.face.pop .eye{--sx:1.08}
-.face[data-state=sleep] .eye{--sy:.08}
-.face[data-state=loading] .eye{--sy:.4}
-.face[data-state=reading] .eye{--sy:.72}
-.face[data-state=thinking] .eye{--sy:.55;border-radius:22% 22% 45% 45%}
-.face[data-state=thinking] .eye.r{--sy:.78}
-.face[data-state=happy] .eye{--sy:.55;border-radius:50% 50% 14% 14% / 80% 80% 14% 14%}
-.face[data-state=listening] .eye{--sy:1.08}
-.face[data-state=sad] .eye{--sy:.6;border-radius:14% 14% 50% 50% / 14% 14% 80% 80%}
-
-/* ---------- Manga expressions ---------- */
-.emo{font-size:min(14vw,72px);line-height:1;opacity:0;transform:scale(.3);transition:opacity .2s ease,transform .3s cubic-bezier(.3,1.6,.5,1);filter:drop-shadow(0 0 10px #ffffff66);pointer-events:none}
-.face.glyph .eye{--sy:1;background:transparent;box-shadow:none;border-radius:30%}
-.face.glyph .emo{opacity:1;transform:scale(1)}
-.face.txt .emo{font:700 min(18vw,88px)/1 Unbounded,system-ui,sans-serif;color:var(--glow);text-shadow:0 0 12px #7CF3E4,0 0 32px #7CF3E488;filter:none}
-.face.mood-love .emo{animation:beat .9s ease-in-out infinite}
-.face.mood-laughing .emo{animation:squish .35s ease-in-out infinite}
-.face.mood-stressed .emo{animation:spin 1s linear infinite}
-.face.mood-sad .emo{animation:droop 1.6s ease-in-out infinite}
-.face.mood-confused .emo{font-size:min(9vw,42px);animation:dart 1.6s ease-in-out infinite}
-
-/* sparkly shoujo eyes */
-.eye::before,.eye::after{content:'';position:absolute;opacity:0;pointer-events:none;transition:opacity .2s}
-.face.mood-shine .eye::before,.face.mood-cool .eye.r::before{content:'✦';opacity:1;top:8%;right:12%;font-size:min(8vw,38px);line-height:1;color:#fff;text-shadow:0 0 8px #fff;animation:twinkle 1.1s ease-in-out infinite}
-.face.mood-shine .eye::after{content:'✦';opacity:1;bottom:14%;left:14%;font-size:min(4.5vw,22px);line-height:1;color:#fff;animation:twinkle 1.1s .4s ease-in-out infinite}
-.face.mood-shine .eye{--sy:1.06}
-/* cool: half-lidded */
-.face.mood-cool .eye{--sy:.45;border-radius:8% 8% 50% 50%}
-/* worried: smaller eyes */
-.face.mood-worried .eye{--sx:.82;--sy:.82}
-/* scared: white-ring eyes with tiny pupils */
-.face.mood-scared .eye{--sy:1;background:transparent;border:min(1.2vw,6px) solid var(--glow);border-radius:50%}
-.face.mood-scared .eye::after{opacity:1;inset:0;margin:auto;width:20%;height:17%;border-radius:50%;background:var(--glow);box-shadow:0 0 10px var(--glow);animation:shake .12s linear infinite}
-
-/* red eyes (teased / angry) */
-.face.red{box-shadow:inset 0 0 0 6px #5A1830,inset 0 0 70px #000b}
-.face.red .eye{--sy:.62;background:var(--red);box-shadow:0 0 18px #FF3B5Caa,0 0 60px #FF3B5C66;border-radius:18% 18% 48% 48%}
-.face.red .eye.l{rotate:14deg}
-.face.red .eye.r{rotate:-14deg}
-.face.mood-angry .eye{--sy:.5}
-
-/* brows */
-.brow{position:absolute;top:calc(var(--eh) * -.2);width:var(--bw);height:min(1.6vw,8px);border-radius:8px;background:var(--glow);box-shadow:0 0 10px var(--glow);opacity:0;transition:opacity .2s,rotate .25s,translate .25s}
-.brow.l{left:calc((var(--ew) - var(--bw)) / 2)}
-.brow.r{right:calc((var(--ew) - var(--bw)) / 2)}
-.face.red .brow{opacity:1;background:var(--red);box-shadow:0 0 10px var(--red)}
-.face.red .brow.l{rotate:22deg;translate:0 6px}
-.face.red .brow.r{rotate:-22deg;translate:0 6px}
-.face.mood-worried .brow,.face.mood-sad .brow{opacity:1}
-.face.mood-worried .brow.l,.face.mood-sad .brow.l{rotate:-18deg}
-.face.mood-worried .brow.r,.face.mood-sad .brow.r{rotate:18deg}
-.face.mood-scared .brow{opacity:1;translate:0 -12px}
-
-/* blush, tears */
-.blush{position:absolute;bottom:calc(var(--eh) * -.18);width:min(13vw,62px);height:min(3.4vw,16px);border-radius:50%;background:repeating-linear-gradient(115deg,#FF7FB0 0 3px,transparent 3px 7px);box-shadow:0 0 14px #FF5FA266;opacity:0;transition:opacity .25s}
-.blush.l{left:calc(var(--ew) * -.1)}
-.blush.r{right:calc(var(--ew) * -.1)}
-.face.mood-love .blush,.face.mood-laughing .blush{opacity:1}
-.tear{position:absolute;top:calc(var(--eh) * .62);width:min(2.6vw,12px);height:min(20vw,96px);border-radius:0 0 8px 8px;background:linear-gradient(#9FE8FF,#4FB8FF 40%,#9FE8FF 60%,#4FB8FF) 0 0/100% 40px;opacity:0;transition:opacity .25s}
-.tear.l{left:calc(var(--ew) * .5 - 6px)}
-.tear.r{right:calc(var(--ew) * .5 - 6px)}
-.face.mood-sad .tear{opacity:.85;animation:flow .5s linear infinite}
-
-/* effects layer */
-.fx{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.fx > *{position:absolute;opacity:0;transition:opacity .2s}
-.speed{inset:-60%;background:repeating-conic-gradient(from 0deg,#ffffff30 0deg 1.2deg,transparent 1.2deg 7deg);-webkit-mask:radial-gradient(circle,transparent 26%,#000 52%);mask:radial-gradient(circle,transparent 26%,#000 52%)}
-.face.mood-scared .speed,.face.impact .speed{opacity:1;animation:flicker .12s steps(2) infinite}
-.gloom{left:12%;right:12%;top:0;height:55%;background:repeating-linear-gradient(90deg,#9A8CFF66 0 2px,transparent 2px 16px);-webkit-mask:linear-gradient(#000,transparent);mask:linear-gradient(#000,transparent)}
-.face.mood-sad .gloom{opacity:1}
-.vein{top:12%;right:15%;font-size:min(11vw,52px);line-height:1}
-.face.red .vein{opacity:1;animation:throb .5s ease-in-out infinite}
-.sweat{top:24%;right:17%;width:min(4.6vw,22px);height:min(4.6vw,22px);background:linear-gradient(135deg,#E6FAFF,#6CC8FF);border-radius:0 50% 50% 50%;rotate:45deg;box-shadow:0 0 12px #6CC8FF88}
-.face.mood-worried .sweat,.face.mood-stressed .sweat,.face.mood-confused .sweat{opacity:1;animation:slide 1.8s ease-in infinite}
-.face.mood-confused .sweat{right:auto;left:17%;rotate:45deg}
-.zzz{top:14%;right:16%;font:700 min(6vw,28px)/1 Unbounded,system-ui,sans-serif;color:#BFD9E8;white-space:pre}
-.face.mood-sleepy .zzz{opacity:1;animation:floatz 2.6s ease-in-out infinite}
-.qmark{top:10%;right:18%;font:700 min(10vw,48px)/1 Unbounded,system-ui,sans-serif;color:#FFD66B;text-shadow:0 0 12px #FFD66B88}
-.face.mood-confused .qmark{opacity:1;animation:bob 1s ease-in-out infinite}
-.hearts{inset:0}
-.hearts i,.sparks i{position:absolute;font-style:normal;line-height:1}
-.hearts i{bottom:10%;color:#FF5F8F;font-size:min(6vw,28px);text-shadow:0 0 10px #FF5F8F}
-.hearts i:nth-child(1){left:14%;animation:rise 2.2s ease-in infinite}
-.hearts i:nth-child(2){right:14%;animation:rise 2.2s .7s ease-in infinite}
-.hearts i:nth-child(3){left:46%;animation:rise 2.2s 1.4s ease-in infinite}
-.face.mood-love .hearts{opacity:1}
-.sparks{inset:0}
-.sparks i{color:#FFF3A8;text-shadow:0 0 10px #FFE066;font-size:min(6vw,28px)}
-.sparks i:nth-child(1){top:14%;left:16%;animation:twinkle 1s ease-in-out infinite}
-.sparks i:nth-child(2){top:20%;right:14%;animation:twinkle 1s .3s ease-in-out infinite}
-.sparks i:nth-child(3){bottom:22%;left:12%;animation:twinkle 1s .6s ease-in-out infinite}
-.sparks i:nth-child(4){bottom:26%;right:18%;animation:twinkle 1s .15s ease-in-out infinite}
-.face.mood-shine .sparks,.face.mood-laughing .sparks{opacity:1}
-
-/* whole-face motion */
-.face.mood-angry .eyes,.face.mood-angry .mouth-wrap{animation:shake .14s linear infinite}
-.face.mood-scared .eyes,.face.mood-scared .mouth-wrap{animation:shake .2s linear infinite}
+/* ---------- Face (anime rig) ---------- */
+.face{--ink:#2A2440;position:relative;margin:max(10px,env(safe-area-inset-top)) 12px 0;height:min(40dvh,320px);min-height:220px;background:radial-gradient(#2A244012 1px,transparent 1.6px) 0 0/10px 10px,radial-gradient(ellipse at 50% 42%,#FFFAF5 0%,#FFEFE6 62%,#F7DCE3 100%);border-radius:36px;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:inset 0 0 0 3px var(--ink),0 6px 24px #2A244022;touch-action:manipulation;transition:box-shadow .3s,background .3s}
+.face.red{background:radial-gradient(#2A244012 1px,transparent 1.6px) 0 0/10px 10px,radial-gradient(ellipse at 50% 42%,#FFF4F4 0%,#FFE1E1 62%,#F9C7CF 100%);box-shadow:inset 0 0 0 3px #C21E3A,0 6px 24px #C21E3A33}
+.bob{width:100%;height:100%;display:grid;place-items:center;animation:breathe 4s ease-in-out infinite}
+.head{width:min(100%,560px);transform:translate(calc(var(--lx,0px) * .25),calc(var(--ly,0px) * .25));transition:transform .35s cubic-bezier(.3,.7,.3,1)}
+#rig{display:block;width:100%;height:auto;max-height:calc(min(40dvh,320px) - 34px);overflow:visible}
+#rig .ink{fill:none;stroke:var(--ink);stroke-linecap:round;stroke-linejoin:round}
+#rig .lash{stroke-width:6.5;stroke:#1E1418}
+#rig .spikes{stroke-width:3.4;stroke:#1E1418}
+#rig .ticks{stroke-width:2;stroke:#1E1418;opacity:.7}
+#rig .lower{stroke-width:2.4;opacity:.55}
+#rig .brow{stroke-width:4;stroke:#6B4A3A}
+#rig .sclera{fill:#fff}
+#rig .pupil{fill:#101830}
+#rig .heart{fill:#B0124F}
+#rig .iris{stroke:#1C4424;stroke-width:2}
+#rig .starP{fill:#F4FFB0;stroke:#2E5A1E;stroke-width:1.5}
+#rig .nose{fill:none;stroke:#C98A7A;stroke-width:2.6;stroke-linecap:round}
+#rig .spiral{fill:none;stroke:#6B3A1E;stroke-width:4.5;stroke-linecap:round;transform-box:fill-box;transform-origin:center;animation:spin 1.4s linear infinite}
+#rig .blank{fill:#fff;stroke:#1E1418;stroke-width:3.5}
+#rig .grim{fill:#fff;stroke:#6E2A2F;stroke-width:3;stroke-linejoin:round}
+#rig #band{opacity:0;transition:opacity .3s}
+.face.mood-love #rig #band,.face.mood-lovesick #rig #band,.face.mood-embarrassed #rig #band,.face.mood-shy #rig #band{opacity:.55}
+#rig .hl{fill:#fff}
+#rig .glyph{font:700 92px/1 Unbounded,system-ui,sans-serif;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+#rig .mouthInk{fill:none;stroke:#6E2A2F;stroke-width:3.8;stroke-linecap:round;stroke-linejoin:round}
+#rig .mouthFill{fill:#E85C75;stroke:#6E2A2F;stroke-width:3;stroke-linejoin:round}
+#rig .tongue{fill:#FFB0C0}
+#rig .teeth{fill:#fff;stroke:#6E2A2F;stroke-width:2;stroke-linejoin:round}
+#rig .stream{fill:none;stroke:#7CCBFF;stroke-width:9;stroke-linecap:round;stroke-dasharray:14 10;opacity:0;animation:stream .5s linear infinite}
+.face.mood-sad #rig .stream,.face.mood-emotional #rig .stream,.face.mood-woeful #rig .stream{opacity:.9}
+#rig .pool{fill:#BFE8FF;opacity:0}
+.face.mood-sad #rig .pool,.face.mood-tearful #rig .pool,.face.mood-emotional #rig .pool,.face.mood-woeful #rig .pool{opacity:.85}
+#rig .nb{fill:#DDF3FF99;stroke:#8CCBEA;stroke-width:2;opacity:0;transform-box:fill-box;transform-origin:center}
+.face[data-state=sleep] #rig .nb,.face.mood-sleepy #rig .nb,.face.mood-asleep #rig .nb{opacity:1;animation:nbub 2.6s ease-in-out infinite}
+#rig .spark{fill:#fff;opacity:0}
+.face.mood-shine #rig .spark{opacity:1}
+#rig g,#rig text{transform-box:fill-box;transform-origin:center}
+.face.mood-stressed #rig .glyph{animation:spin 1s linear infinite}
+.face.mood-laughing #rig .glyph{animation:squish .35s ease-in-out infinite}
+.face.mood-love #rig .heart{animation:beat .9s ease-in-out infinite}
+.face.mood-angry #rig #eyesG,.face.mood-scared #rig #eyesG,.face.mood-frightened #rig #eyesG,.face.mood-jumpy #rig #eyesG{animation:shakeS .16s linear infinite}
+.face.mood-nervous #rig #eyesG,.face.mood-uncomfortable #rig #eyesG{animation:shakeS .45s linear infinite}
+.face.mood-celebrating .head,.face.mood-energetic .head,.face.mood-perky .head{animation:hop .45s ease-in-out infinite}
+.face.mood-stressed #rig #mouthG{animation:wobble .8s ease-in-out infinite}
 .face.mood-laughing .head{animation:hop .35s ease-in-out infinite}
 .face.impact .head{animation:punch .38s cubic-bezier(.3,1.6,.5,1)}
 
-/* ---------- Mouth ---------- */
-.mouth-wrap{--mc:var(--glow);position:relative;display:grid;place-items:center;min-height:min(7vw,34px)}
-.mouth{width:min(13vw,62px);height:min(3.6vw,18px);border:0 solid var(--mc);border-bottom-width:5px;border-radius:0 0 50% 50% / 0 0 100% 100%;background:transparent;filter:drop-shadow(0 0 6px var(--mc));transition:width .18s ease,height .12s ease,border-radius .2s ease,background .2s,border-color .3s,translate .25s,rotate .25s}
-.face[data-state=sleep] .mouth,.face[data-state=loading] .mouth,.face[data-state=reading] .mouth{width:26px;height:0;border-radius:4px}
-.face[data-state=thinking] .mouth{width:22px;height:0;border-radius:4px;translate:16px 0}
-.face[data-state=listening] .mouth{width:18px;height:18px;border-width:4px;border-radius:50%}
-.face[data-state=happy] .mouth{width:min(16vw,76px);height:min(5vw,24px)}
-.face[data-state=sad] .mouth{border-bottom-width:0;border-top-width:5px;height:14px;border-radius:50% 50% 0 0 / 100% 100% 0 0;translate:0 6px}
-.face.mood-love .mouth,.face.mood-shine .mouth,.face.mood-cool .mouth{width:min(16vw,76px);height:min(5vw,24px);border-bottom-width:5px;border-top-width:0;border-radius:0 0 50% 50% / 0 0 100% 100%}
-.face.mood-laughing .mouth{width:min(15vw,70px);height:min(6vw,28px);border-width:0;background:var(--mc);border-radius:0 0 50% 50% / 0 0 100% 100%;animation:bounce .45s ease-in-out infinite}
-.face.mood-sad .mouth{width:min(11vw,52px);height:14px;border-bottom-width:0;border-top-width:5px;border-radius:50% 50% 0 0 / 100% 100% 0 0;translate:0 6px}
-.face.mood-scared .mouth{width:16px;height:22px;border-width:0;background:var(--mc);border-radius:50%}
-.face.mood-sleepy .mouth{width:14px;height:14px;border-width:4px;border-radius:50%;animation:drift 2.4s ease-in-out infinite}
-.face.red .mouth-wrap{--mc:var(--red)}
-.face.mood-worried .mouth,.face.mood-stressed .mouth,.face.mood-confused .mouth,.face.red .mouth{opacity:0}
-.mart{position:absolute;width:min(17vw,80px);height:auto;overflow:visible;filter:drop-shadow(0 0 6px var(--mc))}
-.mart *{opacity:0;fill:none;stroke:var(--mc);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;transition:opacity .15s}
-.face.mood-worried .m-wavy,.face.mood-stressed .m-wavy{opacity:1}
-.face.mood-stressed .mart{animation:wobble .8s ease-in-out infinite}
-.face.mood-confused .m-squig{opacity:1}
-.face.mood-teased .m-cat{opacity:1}
-.face.mood-angry .m-shark,.face.mood-angry .m-teeth{opacity:1}
-.face.mood-angry .m-shark{fill:#2A0714}
-.face.speak .head .mart *{opacity:0}
-.face.speak .head .mouth{opacity:1;width:min(11vw,50px);height:var(--mo,8px);border-width:0;background:var(--mc);border-radius:45%;rotate:0deg;translate:0 0;animation:none;transition:height .08s ease}
+/* effects layer */
+.fx{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2}
+.fx > *{position:absolute;opacity:0;transition:opacity .2s}
+.speed{inset:-60%;background:repeating-conic-gradient(from 0deg,#2A244030 0deg 1.1deg,transparent 1.1deg 6deg);-webkit-mask:radial-gradient(circle,transparent 28%,#000 55%);mask:radial-gradient(circle,transparent 28%,#000 55%)}
+.face.mood-scared .speed,.face.mood-frightened .speed,.face.impact .speed{opacity:1;animation:flicker .12s steps(2) infinite}
+.gloom{left:12%;right:12%;top:0;height:55%;background:repeating-linear-gradient(90deg,#5A4E8A55 0 2px,transparent 2px 15px);-webkit-mask:linear-gradient(#000,transparent);mask:linear-gradient(#000,transparent)}
+.face.mood-sad .gloom,.face.mood-woeful .gloom,.face.mood-disappointed .gloom{opacity:1}
+.shock{left:0;right:0;top:-10%;height:66%;background:radial-gradient(ellipse 60% 64% at 50% 0%,#7FA8FFee,#7FA8FF00 100%)}
+.shadeP{left:0;right:0;top:-10%;height:62%;background:radial-gradient(ellipse 55% 60% at 50% 0%,#FF8A9Acc,#FF8A9A00 100%)}
+.face.mood-angry .shadeP,.face.mood-teased .shadeP,.face.mood-irritable .shadeP,.face.mood-grumpy .shadeP{opacity:1}
+.face.mood-scared .shock,.face.mood-frightened .shock,.face.mood-jumpy .shock{opacity:1}
+.vein{top:10%;right:14%;font-size:min(11vw,52px);line-height:1}
+.face.red .vein,.face.mood-irritable .vein,.face.mood-grumpy .vein{opacity:1;animation:throb .5s ease-in-out infinite}
+.sweat{top:20%;right:16%;width:min(5vw,24px);height:min(5vw,24px);background:linear-gradient(135deg,#FFFFFF,#7CCBFF);border:2px solid #4B8FC4;border-radius:0 50% 50% 50%;rotate:45deg}
+.face.mood-worried .sweat,.face.mood-stressed .sweat,.face.mood-confused .sweat,.face.mood-frightened .sweat,.face.mood-apprehensive .sweat,.face.mood-jumpy .sweat,.face.mood-embarrassed .sweat,.face.mood-troubled .sweat,.face.mood-nervous .sweat,.face.mood-uncomfortable .sweat{opacity:1;animation:slide 1.8s ease-in infinite}
+.face.mood-confused .sweat{right:auto;left:16%}
+.zzz{top:12%;right:15%;font:700 min(6vw,28px)/1 Unbounded,system-ui,sans-serif;color:#5E5A78;white-space:pre}
+.face.mood-sleepy .zzz,.face.mood-asleep .zzz,.face[data-state=sleep] .zzz{opacity:1;animation:floatz 2.6s ease-in-out infinite}
+.qmark{top:8%;right:17%;font:700 min(10vw,48px)/1 Unbounded,system-ui,sans-serif;color:var(--ink)}
+.face.mood-confused .qmark,.face.mood-bewildered .qmark,.face.mood-doubtful .qmark{opacity:1;animation:bob 1s ease-in-out infinite}
+.bang{top:6%;right:15%;font:700 min(12vw,58px)/1 Unbounded,system-ui,sans-serif;color:#FF3B5C;-webkit-text-stroke:2px var(--ink)}
+.face.notice .bang{opacity:1;animation:bang .7s cubic-bezier(.34,1.56,.64,1) both}
+.dots{top:10%;right:14%;display:flex;gap:6px}
+.dots i{width:10px;height:10px;border-radius:50%;background:var(--ink);animation:dot 1.1s ease-in-out infinite}
+.dots i:nth-child(2){animation-delay:.18s}.dots i:nth-child(3){animation-delay:.36s}
+.face[data-state=thinking]:not(.mood) .dots{opacity:1}
+.hearts{inset:0}
+.hearts i,.sparks i{position:absolute;font-style:normal;line-height:1}
+.hearts i{bottom:8%;color:#FF4F8B;font-size:min(6vw,28px)}
+.hearts i:nth-child(1){left:12%;animation:rise 2.2s ease-in infinite}
+.hearts i:nth-child(2){right:12%;animation:rise 2.2s .7s ease-in infinite}
+.hearts i:nth-child(3){left:47%;animation:rise 2.2s 1.4s ease-in infinite}
+.face.mood-love .hearts,.face.mood-lovesick .hearts{opacity:1}
+.sparks{inset:0}
+.sparks i{color:#F5A800;text-shadow:0 0 8px #FFE58A;font-size:min(6vw,28px)}
+.sparks i:nth-child(1){top:12%;left:14%;animation:twinkle 1s ease-in-out infinite}
+.sparks i:nth-child(2){top:18%;right:12%;animation:twinkle 1s .3s ease-in-out infinite}
+.sparks i:nth-child(3){bottom:20%;left:10%;animation:twinkle 1s .6s ease-in-out infinite}
+.sparks i:nth-child(4){bottom:24%;right:16%;animation:twinkle 1s .15s ease-in-out infinite}
+.face.mood-shine .sparks,.face.mood-laughing .sparks,.face.mood-energetic .sparks,.face.mood-perky .sparks,.face.mood-celebrating .sparks{opacity:1}
+.steam{top:14%;width:100%;height:30%}
+.steam i{position:absolute;width:38px;height:24px;border-radius:50%;background:radial-gradient(circle,#FFFFFF 0 35%,#E6E0EE 60%,#E6E0EE00 72%);border:2px solid #2A244033}
+.steam i:nth-child(1){left:10%;animation:puffL 1s ease-out infinite}
+.steam i:nth-child(2){right:10%;animation:puffR 1s .5s ease-out infinite}
+.face.mood-angry .steam,.face.mood-grumpy .steam{opacity:1}
 
-@keyframes beat{0%,100%{transform:scale(1)}30%{transform:scale(1.22)}45%{transform:scale(.95)}60%{transform:scale(1.12)}}
-@keyframes twinkle{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.18) rotate(18deg)}}
-@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10%)}}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6%)}75%{transform:translateX(6%)}}
-@keyframes wobble{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(12deg)}}
-@keyframes drift{0%,100%{transform:translateY(4%) scale(.96)}50%{transform:translateY(-4%) scale(1.04)}}
-@keyframes droop{0%,100%{transform:translateY(0)}50%{transform:translateY(8%)}}
-@keyframes tilt{0%,100%{transform:rotate(-15deg)}50%{transform:rotate(15deg)}}
+@keyframes breathe{0%,100%{translate:0 0}50%{translate:0 -4px}}
+@keyframes beat{0%,100%{transform:scale(1)}30%{transform:scale(1.25)}45%{transform:scale(.95)}60%{transform:scale(1.12)}}
+@keyframes twinkle{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.2) rotate(18deg)}}
+@keyframes shakeS{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@keyframes wobble{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(10deg)}}
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes squish{0%,100%{transform:scale(1,1)}50%{transform:scale(1.15,.8)}}
-@keyframes dart{0%,100%{transform:translateX(-12%)}50%{transform:translateX(12%)}}
-@keyframes flow{to{background-position:0 40px}}
+@keyframes squish{0%,100%{transform:scale(1,1)}50%{transform:scale(1.15,.82)}}
 @keyframes flicker{50%{opacity:.55}}
 @keyframes throb{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
 @keyframes slide{0%{transform:translateY(-6px);opacity:0}20%{opacity:1}100%{transform:translateY(22px);opacity:0}}
@@ -177,12 +134,18 @@ button,textarea{font:inherit;color:inherit}
 @keyframes bob{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-8px) rotate(8deg)}}
 @keyframes rise{0%{transform:translateY(0) scale(.6);opacity:0}20%{opacity:1}100%{transform:translateY(-140px) scale(1.1);opacity:0}}
 @keyframes hop{0%,100%{scale:1}50%{scale:1.04 .96}}
-@keyframes punch{0%{scale:1}35%{scale:1.14}100%{scale:1}}
+@keyframes punch{0%{scale:1}35%{scale:1.12}100%{scale:1}}
+@keyframes bang{0%{transform:scale(0) rotate(-20deg)}40%{transform:scale(1.35) rotate(8deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes dot{0%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-6px)}}
+@keyframes nbub{0%,100%{transform:scale(.45)}60%{transform:scale(1.5)}}
+@keyframes puffL{0%{transform:translate(20px,20px) scale(.4);opacity:0}30%{opacity:1}100%{transform:translate(-18px,-24px) scale(1.4);opacity:0}}
+@keyframes puffR{0%{transform:translate(-20px,20px) scale(.4);opacity:0}30%{opacity:1}100%{transform:translate(18px,-24px) scale(1.4);opacity:0}}
+@keyframes stream{to{stroke-dashoffset:-24}}
 
-.status{position:absolute;left:18px;right:18px;bottom:12px;margin:0;color:#BFD9E8;font-size:14px;line-height:1.3;text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.retry{position:absolute;top:10px;left:50%;translate:-50% 0;border:0;border-radius:999px;padding:7px 16px;background:var(--glow);color:var(--screen);font-weight:700;font-size:14px;cursor:pointer}
-.name{position:absolute;top:16px;left:22px;margin:0;font:600 15px/1 Unbounded,system-ui,sans-serif;color:#5C6BA8;letter-spacing:.02em;z-index:1}
-.powered{display:block;margin-top:4px;font:400 11px/1 "Atkinson Hyperlegible",system-ui,sans-serif;color:#8A96C8;letter-spacing:.03em}
+.status{position:absolute;left:18px;right:18px;bottom:10px;margin:0;color:#5E5A78;font-size:14px;line-height:1.3;text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;z-index:3}
+.retry{position:absolute;top:10px;left:50%;translate:-50% 0;border:0;border-radius:999px;padding:7px 16px;background:var(--pink);color:#fff;font-weight:700;font-size:14px;cursor:pointer;z-index:4}
+.name{position:absolute;top:16px;left:22px;margin:0;font:600 15px/1 Unbounded,system-ui,sans-serif;color:var(--ink);letter-spacing:.02em;z-index:3}
+.powered{display:block;margin-top:4px;font:400 11px/1 "Atkinson Hyperlegible",system-ui,sans-serif;color:#8A7FA8;letter-spacing:.03em}
 
 /* ---------- Chat ---------- */
 .log{overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:10px;overscroll-behavior:contain}
@@ -246,25 +209,93 @@ textarea{width:100%;min-height:44px;max-height:140px;resize:none;padding:10px 14
   z
     z</div>
       <div class="qmark">?</div>
+      <div class="bang">!</div>
+      <div class="dots"><i></i><i></i><i></i></div>
+      <div class="steam"><i></i><i></i></div>
+      <div class="shock"></div>
+      <div class="shadeP"></div>
     </div>
     <p class="name">Blink <span class="powered">powered by FabLab</span></p>
+    <div class="bob">
     <div class="head" id="head">
-      <div class="eyes">
-        <div class="eye l"><span class="emo"></span></div><div class="eye r"><span class="emo"></span></div>
-        <i class="brow l"></i><i class="brow r"></i>
-        <i class="blush l"></i><i class="blush r"></i>
-        <i class="tear l"></i><i class="tear r"></i>
-      </div>
-      <div class="mouth-wrap">
-        <div class="mouth" id="mouth"></div>
-        <svg class="mart" viewBox="0 0 60 30" aria-hidden="true">
-          <path class="m-wavy" d="M6 15q6-7 12 0t12 0t12 0t12 0"/>
-          <path class="m-squig" d="M8 17l7-5l7 5l7-5l7 5l7-5l7 5"/>
-          <path class="m-cat" d="M12 10q9 13 18 0q9 13 18 0"/>
-          <path class="m-shark" d="M8 6H52Q48 28 30 28Q12 28 8 6Z"/>
-          <path class="m-teeth" d="M12 7l4 7l4-7l4 7l4-7l4 7l4-7l4 7l4-7"/>
-        </svg>
-      </div>
+      <svg id="rig" viewBox="0 0 400 250" aria-hidden="true">
+        <defs>
+          <radialGradient id="gTeal" cx="50%" cy="70%" r="72%"><stop offset="0" stop-color="#DDF7A8"/><stop offset=".45" stop-color="#4FB24A"/><stop offset="1" stop-color="#16461F"/></radialGradient>
+          <radialGradient id="gRed" cx="50%" cy="70%" r="72%"><stop offset="0" stop-color="#FFC9CF"/><stop offset=".42" stop-color="#E0344F"/><stop offset="1" stop-color="#4A0717"/></radialGradient>
+          <radialGradient id="gPink" cx="50%" cy="70%" r="72%"><stop offset="0" stop-color="#FFE3EE"/><stop offset=".42" stop-color="#FF5F9F"/><stop offset="1" stop-color="#6E0E3A"/></radialGradient>
+          <linearGradient id="gLid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0A1A2A" stop-opacity=".6"/><stop offset=".48" stop-color="#0A1A2A" stop-opacity="0"/></linearGradient>
+          <pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-28)"><rect width="2.6" height="7" fill="#FF6F9A"/></pattern>
+          <clipPath id="cL"><path id="cpL"/></clipPath>
+          <clipPath id="cR"><path id="cpR"/></clipPath>
+        </defs>
+        <g id="blushG">
+          <ellipse id="band" cx="200" cy="166" rx="112" ry="15" fill="#FF9DB5"/>
+          <ellipse cx="108" cy="170" rx="32" ry="11" fill="#FF9DB5" opacity=".45"/>
+          <ellipse cx="292" cy="170" rx="32" ry="11" fill="#FF9DB5" opacity=".45"/>
+          <ellipse cx="108" cy="170" rx="24" ry="7" fill="url(#hatch)"/>
+          <ellipse cx="292" cy="170" rx="24" ry="7" fill="url(#hatch)"/>
+        </g>
+        <g id="eyesG">
+          <g id="eL">
+            <path class="sclera" id="scL"/>
+            <g clip-path="url(#cL)">
+              <g id="irL">
+                <ellipse class="iris" rx="34" ry="41" fill="url(#gTeal)"/>
+                <ellipse rx="34" ry="41" fill="url(#gLid)"/>
+                <ellipse class="pupil" rx="13" ry="17"/>
+                <path class="pupil heart" d="M0,11 C-24,-4 -13,-24 0,-11 C13,-24 24,-4 0,11Z"/>
+                <path class="starP" d="M0,-15 L4.4,-5 L15,-4.6 L6.8,2.4 L9.3,13 L0,7.2 L-9.3,13 L-6.8,2.4 L-15,-4.6 L-4.4,-5Z"/>
+                <ellipse class="hl hlA" cx="12" cy="-16" rx="11" ry="9"/>
+                <ellipse class="hl hlB" cx="-12" cy="15" rx="5" ry="4"/>
+                <path class="spark" d="M-14,-30 l3,-9 l3,9 l9,3 l-9,3 l-3,9 l-3,-9 l-9,-3Z M14,8 l2,-6 l2,6 l6,2 l-6,2 l-2,6 l-2,-6 l-6,-2Z"/>
+              </g>
+              <path class="pool" id="poL"/>
+            </g>
+            <path class="ink lower" id="loL"/>
+            <path class="ink lash" id="laL"/>
+            <path class="ink spikes" id="spL"/>
+            <path class="ink ticks" id="tkL"/>
+            <circle class="blank" id="blL" r="30"/>
+            <path class="spiral" id="srL"/>
+            <text class="glyph" id="gyL"></text>
+            <path class="stream" id="stL"/>
+          </g>
+          <g id="eR">
+            <path class="sclera" id="scR"/>
+            <g clip-path="url(#cR)">
+              <g id="irR">
+                <ellipse class="iris" rx="34" ry="41" fill="url(#gTeal)"/>
+                <ellipse rx="34" ry="41" fill="url(#gLid)"/>
+                <ellipse class="pupil" rx="13" ry="17"/>
+                <path class="pupil heart" d="M0,11 C-24,-4 -13,-24 0,-11 C13,-24 24,-4 0,11Z"/>
+                <path class="starP" d="M0,-15 L4.4,-5 L15,-4.6 L6.8,2.4 L9.3,13 L0,7.2 L-9.3,13 L-6.8,2.4 L-15,-4.6 L-4.4,-5Z"/>
+                <ellipse class="hl hlA" cx="12" cy="-16" rx="11" ry="9"/>
+                <ellipse class="hl hlB" cx="-12" cy="15" rx="5" ry="4"/>
+                <path class="spark" d="M-14,-30 l3,-9 l3,9 l9,3 l-9,3 l-3,9 l-3,-9 l-9,-3Z M14,8 l2,-6 l2,6 l6,2 l-6,2 l-2,6 l-2,-6 l-6,-2Z"/>
+              </g>
+              <path class="pool" id="poR"/>
+            </g>
+            <path class="ink lower" id="loR"/>
+            <path class="ink lash" id="laR"/>
+            <path class="ink spikes" id="spR"/>
+            <path class="ink ticks" id="tkR"/>
+            <circle class="blank" id="blR" r="30"/>
+            <path class="spiral" id="srR"/>
+            <text class="glyph" id="gyR"></text>
+            <path class="stream" id="stR"/>
+          </g>
+        </g>
+        <path class="nose" d="M199,151 q5,7 0,11"/>
+        <path class="ink brow" id="brL"/>
+        <path class="ink brow" id="brR"/>
+        <g id="mouthG" transform="translate(30,30.75) scale(.85)">
+          <path id="mo"/>
+          <path class="tongue" id="mt"/>
+          <path class="teeth" id="mte"/>
+        </g>
+        <circle class="nb" id="nb" cx="236" cy="206" r="9"/>
+      </svg>
+    </div>
     </div>
     <button class="retry" id="retry" hidden>Try again</button>
     <p class="status" id="status" role="status">Waking up…</p>
@@ -317,7 +348,7 @@ const PDFJS_WORKER = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf
 const MAMMOTH = "https://cdn.jsdelivr.net/npm/mammoth@1.12.3/mammoth.browser.min.js";
 
 const $ = s => document.querySelector(s);
-const face = $('#face'), headEl = $('#head'), mouthEl = $('#mouth'), statusEl = $('#status');
+const face = $('#face'), headEl = $('#head'), statusEl = $('#status');
 const logEl = $('#log'), qEl = $('#q'), sendBtn = $('#send'), retryBtn = $('#retry');
 const micBtn = $('#mic'), speakBtn = $('#speakBtn');
 const brainBtn = $('#brainBtn'), brainMenu = $('#brainMenu'), brainIcon = $('#brainIcon');
@@ -338,19 +369,15 @@ const tier = id => PC_TIERS.find(t => t[0] === id) || PC_TIERS[2];
 const tierLabel = id => tier(id)[1] + ' ' + tier(id)[2];
 
 /* ---------- Eyes & mouth ---------- */
-const MOODS = {
-  love: { emo: ['❤️', '❤️'] },
-  laughing: { txt: ['>', '<'] },
-  stressed: { txt: ['@', '@'] },
-  sad: { txt: ['T', 'T'] },
-  sleepy: { txt: ['—', '—'] },
-  confused: { txt: ['●', '●'] },
-  shine: {}, cool: {}, worried: {}, scared: {},
-  teased: { red: true }, angry: { red: true }
-};
-const DRAMATIC = new Set(['teased', 'angry', 'scared', 'love', 'shine', 'laughing']);
+const MOOD_NAMES = ['happy', 'love', 'shine', 'laughing', 'cool', 'teased', 'angry', 'scared', 'worried', 'stressed', 'sleepy', 'sad', 'confused',
+  'energetic', 'grumpy', 'snobby', 'tearful', 'suspicious', 'irritable', 'concerned', 'frightened', 'bewildered', 'confident', 'satisfied', 'coy',
+  'apprehensive', 'defiant', 'disappointed', 'perky', 'sneaky', 'jumpy', 'embarrassed', 'sympathetic', 'troubled', 'shy', 'stern', 'woeful',
+  'emotional', 'malicious', 'doubtful', 'celebrating', 'nervous', 'lovesick', 'preoccupied', 'uncomfortable', 'comfortable', 'asleep'];
+const MOODS = Object.fromEntries(MOOD_NAMES.map(n => [n, {}]));
+MOODS.teased.red = MOODS.angry.red = true;
+const DRAMATIC = new Set(['teased', 'angry', 'scared', 'love', 'shine', 'laughing', 'frightened', 'jumpy', 'celebrating', 'energetic', 'bewildered']);
 const eyes = {
-  state: 'sleep', timer: 0, lastPointer: 0, lastPop: 0, moodName: '', moodTimer: 0, idleNap: false, flapTimer: 0,
+  state: 'sleep', timer: 0, lastPointer: 0, lastPop: 0, moodName: '', moodTimer: 0, idleNap: false, flapTimer: 0, lx: 0, ly: 0, blinkAt: -1e9, mouthT: 0,
   set(s){
     this.state = s; face.dataset.state = s;
     clearInterval(this.timer); this.timer = 0;
@@ -362,14 +389,14 @@ const eyes = {
     else if (s === 'listening') this.look(0, -4);
     else this.look(0, 0);
   },
-  look(x, y){ headEl.style.setProperty('--lx', x + 'px'); headEl.style.setProperty('--ly', y + 'px'); },
+  look(x, y){ this.lx = x; this.ly = y; headEl.style.setProperty('--lx', x + 'px'); headEl.style.setProperty('--ly', y + 'px'); },
   sweep(x, y, ms){
     this.look(-x, y);
     if (calm) return;
     let d = 1;
     this.timer = setInterval(() => { d = -d; this.look(d * x, y); }, ms);
   },
-  blink(){ face.classList.add('blink'); setTimeout(() => face.classList.remove('blink'), 130); },
+  blink(){ this.blinkAt = performance.now(); },
   pop(){
     const now = performance.now();
     if (calm || now - this.lastPop < 110) return;
@@ -383,7 +410,7 @@ const eyes = {
     clearTimeout(this.mumbleOff);
     this.mumbleOff = setTimeout(() => { if (!speaking) face.classList.remove('speak'); }, 160);
   },
-  flap(){ mouthEl.style.setProperty('--mo', Math.round(4 + Math.random() * 22) + 'px'); },
+  flap(){ this.mouthT = .25 + Math.random() * .75; },
   talk(on){
     clearInterval(this.flapTimer);
     if (on) {
@@ -400,12 +427,7 @@ const eyes = {
     this.moodName = name;
     face.classList.add('mood', 'mood-' + name);
     if (m.red) face.classList.add('red');
-    const marks = m.emo || m.txt;
-    if (marks) {
-      face.classList.add('glyph');
-      if (m.txt) face.classList.add('txt');
-      face.querySelectorAll('.emo').forEach((e, i) => e.textContent = marks[i]);
-    }
+    if (['scared', 'confused', 'frightened', 'jumpy', 'bewildered'].includes(name)) notice();
     if (DRAMATIC.has(name) && !calm) {
       face.classList.remove('impact'); void face.offsetWidth;
       face.classList.add('impact');
@@ -423,10 +445,222 @@ const eyes = {
   }
 };
 
+/* ---------- Anime face rig ---------- */
+const rigEl = id => document.getElementById(id);
+const R = {};
+['L', 'R'].forEach(s => {
+  R[s] = {
+    cp: rigEl('cp' + s), sc: rigEl('sc' + s), ir: rigEl('ir' + s), po: rigEl('po' + s),
+    lo: rigEl('lo' + s), la: rigEl('la' + s), gy: rigEl('gy' + s), st: rigEl('st' + s),
+    iris: rigEl('ir' + s).querySelector('.iris'), pupil: rigEl('ir' + s).querySelector('ellipse.pupil'),
+    heart: rigEl('ir' + s).querySelector('.heart'), hlA: rigEl('ir' + s).querySelector('.hlA'), hlB: rigEl('ir' + s).querySelector('.hlB'),
+    br: rigEl('br' + s), sp: rigEl('sp' + s), tk: rigEl('tk' + s), bl: rigEl('bl' + s), sr: rigEl('sr' + s),
+    star: rigEl('ir' + s).querySelector('.starP')
+  };
+});
+const EYE = { L: { cx: 120, dir: 1 }, R: { cx: 280, dir: -1 } }, CY = 112;
+function spiralD(cx, cy){
+  let d = '';
+  for (let i = 0; i <= 90; i++) {
+    const a = i / 90 * Math.PI * 6, r = 2 + i / 90 * 30;
+    d += (i ? 'L' : 'M') + (cx + Math.cos(a) * r).toFixed(1) + ',' + (cy + Math.sin(a) * r).toFixed(1);
+  }
+  return d;
+}
+R.L.sr.setAttribute('d', spiralD(EYE.L.cx, CY + 4)); R.R.sr.setAttribute('d', spiralD(EYE.R.cx, CY + 4));
+R.L.bl.setAttribute('cx', EYE.L.cx); R.R.bl.setAttribute('cx', EYE.R.cx);
+R.L.bl.setAttribute('cy', CY + 6); R.R.bl.setAttribute('cy', CY + 6);
+const RIG_BASE = { open: 1, tiltIn: 0, squint: 0, irisS: 1, pupil: 1, hl: 1, browY: 0, browTilt: 0, blush: .25, asym: 0, glyphSize: 92 };
+const RIG_STATE = {
+  idle: { mouth: 'smile' }, talking: { mouth: 'smile' },
+  sleep: { kind: 'closed', mouth: 'o', blush: .2 },
+  loading: { open: .5, mouth: 'flat' },
+  reading: { open: .78, mouth: 'flat' },
+  thinking: { open: .82, mouth: 'flat', browTilt: -4, asym: .28 },
+  happy: { kind: 'arc', mouth: 'big', blush: .75 },
+  sad: { open: .8, tiltIn: -10, browTilt: -14, mouth: 'frown' },
+  listening: { open: 1.1, hl: 1.3, mouth: 'o', browY: -6 }
+};
+const RIG_MOOD = {
+  happy: { kind: 'arc', mouth: 'big', blush: .75 },
+  love: { kind: 'heart', col: 'Pink', mouth: 'big', blush: 1, browY: -4 },
+  laughing: { kind: 'arc', mouth: 'D', blush: 1 },
+  shine: { kind: 'star', mouth: 'big', irisS: 1.08, hl: 1.35, blush: .6 },
+  cool: { kindR: 'arc', mouth: 'big', browTilt: 2, blush: .35 },
+  teased: { open: .72, tiltIn: 8, pupil: .85, mouth: 'cat', browTilt: 16, blush: .5 },
+  angry: { open: .78, tiltIn: 14, pupil: .8, mouth: 'shark', browTilt: 24, blush: 0 },
+  scared: { kind: 'blank', open: 1, mouth: 'O', browY: -14, browTilt: -10, blush: 0 },
+  worried: { open: .92, tiltIn: -10, mouth: 'grimace', browTilt: -16 },
+  stressed: { kind: 'spiral', mouth: 'wavyOpen', browTilt: -12 },
+  sad: { kind: 'watery', open: .82, tiltIn: -12, mouth: 'frown', browTilt: -18, hl: 1.4 },
+  sleepy: { open: .34, tiltIn: -3, squint: .1, gaze: [0, 8], mouth: 'o', browY: 4, browTilt: -4, blush: .15 },
+  confused: { open: 1, gaze: [10, -6], mouth: 'o', browTilt: 12, browAsym: true },
+
+  energetic: { open: 1.12, hl: 1.35, irisS: 1.04, browY: -9, mouth: 'big', blush: .45 },
+  grumpy: { open: .55, tiltIn: 12, squint: .2, browTilt: 18, browY: 6, mouth: 'frown', blush: 0 },
+  snobby: { open: .44, tiltIn: -3, gaze: [-16, -8], browY: -8, browTilt: -5, mouth: 'smirk', blush: .1 },
+  tearful: { kind: 'watery', open: .95, hl: 1.55, tiltIn: -8, browTilt: -12, mouth: 'wavy' },
+  suspicious: { open: .5, asym: .35, gaze: [16, 0], browTilt: 10, browAsym: true, mouth: 'flat' },
+  irritable: { open: .6, tiltIn: 14, squint: .25, browTilt: 20, mouth: 'grimace', blush: 0 },
+  concerned: { open: .9, tiltIn: -8, browTilt: -14, mouth: 'frown' },
+  frightened: { kind: 'blank', open: 1, browY: -12, browTilt: -10, mouth: 'O', blush: 0 },
+  bewildered: { open: 1.16, irisS: .82, pupil: .6, browY: -10, browTilt: 8, browAsym: true, mouth: 'o' },
+  confident: { open: .72, squint: .3, hl: 1.15, browTilt: 6, mouth: 'smirk', blush: .25 },
+  satisfied: { kind: 'closed', mouth: 'smile', blush: .55, browY: -2 },
+  coy: { open: .7, gaze: [-18, 10], hl: 1.25, browTilt: -4, mouth: 'smile', blush: .85 },
+  apprehensive: { open: .95, tiltIn: -10, gaze: [10, 4], browTilt: -14, mouth: 'wavy' },
+  defiant: { kind: 'shut', browY: -4, browTilt: 14, mouth: 'frown', blush: .1 },
+  disappointed: { open: .5, tiltIn: -8, gaze: [0, 12], browTilt: -10, mouth: 'frown', blush: .1 },
+  perky: { open: 1.08, hl: 1.35, browY: -8, mouth: 'big', blush: .45 },
+  sneaky: { open: .44, squint: .2, gaze: [18, 2], browTilt: 10, mouth: 'smirk' },
+  jumpy: { open: 1.22, irisS: .65, pupil: .7, browY: -14, browTilt: -6, mouth: 'O' },
+  embarrassed: { kind: 'shut', browTilt: -12, mouth: 'wavy', blush: 1 },
+  sympathetic: { open: .86, tiltIn: -8, hl: 1.2, browTilt: -10, mouth: 'smile', blush: .35 },
+  troubled: { open: .9, tiltIn: -12, pupil: .85, browTilt: -18, mouth: 'wavy' },
+  shy: { open: .74, gaze: [-10, 14], browTilt: -8, mouth: 'o', blush: 1 },
+  stern: { open: .62, tiltIn: 8, squint: .15, browY: 4, browTilt: 12, mouth: 'flat', blush: 0 },
+  woeful: { kind: 'watery', open: .7, tiltIn: -14, gaze: [0, 10], browTilt: -20, mouth: 'frown', hl: 1.3 },
+  emotional: { kind: 'watery', open: 1, hl: 1.6, browTilt: -12, mouth: 'wavy', blush: .5 },
+  malicious: { col: 'Red', open: .5, tiltIn: 14, squint: .35, pupil: .55, browTilt: 20, mouth: 'smirk', blush: 0 },
+  doubtful: { open: .7, asym: .3, gaze: [12, -6], browTilt: 12, browAsym: true, mouth: 'squig' },
+  celebrating: { kind: 'arc', mouth: 'D', blush: .8, browY: -6 },
+  nervous: { open: 1, irisS: .82, pupil: .75, tiltIn: -8, browTilt: -12, mouth: 'wavy' },
+  lovesick: { kind: 'heart', col: 'Pink', open: .7, tiltIn: -6, mouth: 'smile', blush: 1 },
+  preoccupied: { open: .8, gaze: [16, -16], browTilt: 6, browAsym: true, mouth: 'flat' },
+  uncomfortable: { open: .7, asym: .4, tiltIn: -8, browTilt: -12, mouth: 'squig' },
+  comfortable: { kind: 'closed', mouth: 'smile', blush: .4 },
+  asleep: { kind: 'closed', mouth: 'o', blush: .2 }
+};
+const SPRING = ['open', 'tiltIn', 'squint', 'irisS', 'pupil', 'hl', 'browY', 'browTilt', 'blush', 'asym', 'lookX', 'lookY', 'mOpen'];
+const cur = {}, vel = {};
+SPRING.forEach(k => { cur[k] = k === 'open' || k === 'irisS' || k === 'pupil' || k === 'hl' ? 1 : 0; vel[k] = 0; });
+
+function rigTarget(){
+  const t = { ...RIG_BASE, kind: 'normal', col: 'Teal', mouth: 'smile', ...(RIG_STATE[eyes.state] || RIG_STATE.idle), ...(RIG_MOOD[eyes.moodName] || {}) };
+  if (face.classList.contains('speak')) t.mouth = 'talk';
+  const md = RIG_MOOD[eyes.moodName];
+  t.lookX = md && md.gaze ? md.gaze[0] : (eyes.lx || 0) * .45;
+  t.lookY = md && md.gaze ? md.gaze[1] : (eyes.ly || 0) * .45;
+  t.mOpen = face.classList.contains('speak') ? (eyes.mouthT || 0) : 0;
+  return t;
+}
+function blinkK(now){
+  const t = (now - (eyes.blinkAt || -1e9)) / 150;
+  return t >= 1 ? 1 : Math.max(.04, Math.abs(1 - 2 * t));
+}
+function drawEye(side, t, open){
+  const { cx, dir } = EYE[side], r = R[side];
+  const hw = 54, H = 48 * open, B = Math.max(2, 36 * open * (1 - t.squint));
+  const xi = cx + dir * hw, xo = cx - dir * hw, yi = CY + 4 + t.tiltIn * .4, yo = CY + 6;
+  const topC = `C${xo + dir * 10},${CY - H * 1.28} ${xi - dir * 18},${CY - H * 1.28 + t.tiltIn} ${xi},${yi}`;
+  const botC = `C${xi - dir * 20},${CY + B} ${xo + dir * 20},${CY + B} ${xo},${yo}`;
+  const shape = `M${xo},${yo} ${topC} ${botC}Z`;
+  const kind = side === 'R' && t.kindR ? t.kindR : t.kind;
+  const lidded = !['closed', 'arc', 'glyph', 'shut', 'spiral', 'blank'].includes(kind);
+  r.sc.style.display = r.ir.parentNode.style.display = lidded ? '' : 'none';
+  r.lo.style.display = lidded ? '' : 'none';
+  r.gy.style.display = kind === 'glyph' ? '' : 'none';
+  r.sr.style.display = kind === 'spiral' ? '' : 'none';
+  r.bl.style.display = kind === 'blank' ? '' : 'none';
+  r.bl.setAttribute('r', 30 * Math.max(.1, Math.min(1.2, open)));
+  let spikes = '', ticks = '';
+  if (lidded) {
+    r.cp.setAttribute('d', shape); r.sc.setAttribute('d', shape);
+    r.la.setAttribute('d', `M${xo - dir * 13},${yo - 11} L${xo},${yo} ${topC}`);
+    if (open > .35) spikes = `M${xo + dir * 2},${yo - 4} l${-dir * 10},${-1} M${xo + dir * 7},${CY - H * .42} l${-dir * 10},${-4} M${xo + dir * 14},${CY - H * .74} l${-dir * 8},${-6}`;
+    if (B > 12) ticks = `M${xo + dir * 16},${CY + B * .8} l${-dir * 2},${5} M${xo + dir * 28},${CY + B * .93} l${-dir},${5}`;
+    r.lo.setAttribute('d', `M${xi},${yi} ${botC}`);
+    r.ir.setAttribute('transform', `translate(${cx + t.lookX},${CY + 8 + t.lookY}) scale(${t.irisS})`);
+    r.iris.setAttribute('fill', `url(#g${t.col})`);
+    const heart = kind === 'heart', starry = kind === 'star';
+    r.heart.style.display = heart ? '' : 'none';
+    r.star.style.display = starry ? '' : 'none';
+    r.pupil.style.display = heart || starry ? 'none' : '';
+    r.pupil.setAttribute('rx', 13 * t.pupil); r.pupil.setAttribute('ry', 17 * t.pupil);
+    const hlOn = kind !== 'ring' && t.col !== 'Red';
+    r.hlA.style.display = r.hlB.style.display = hlOn ? '' : 'none';
+    r.hlA.setAttribute('rx', 11 * t.hl); r.hlA.setAttribute('ry', 9 * t.hl);
+    r.hlB.setAttribute('rx', 5 * t.hl); r.hlB.setAttribute('ry', 4 * t.hl);
+    r.po.setAttribute('d', `M${xo + dir * 6},${CY + B * .5} Q${cx},${CY + B + 8} ${xi - dir * 6},${CY + B * .5} L${xi},${CY + B + 20} L${xo},${CY + B + 20}Z`);
+    r.st.setAttribute('d', `M${cx - dir * 14},${CY + B + 2} L${cx - dir * 14},250`);
+  } else if (kind === 'closed') {
+    r.la.setAttribute('d', `M${xo},${CY + 2} Q${cx},${CY + 26} ${xi},${CY + 2}`);
+    spikes = `M${xo},${CY + 2} l${-dir * 11},${-4}`;
+    ticks = `M${xo + dir * 14},${CY + 10} l${-dir * 4},${7} M${xo + dir * 28},${CY + 14} l${-dir * 2},${7} M${xo + dir * 42},${CY + 15} l${-dir},${7}`;
+  } else if (kind === 'spiral' || kind === 'blank') {
+    r.la.setAttribute('d', '');
+  } else if (kind === 'shut') {
+    r.la.setAttribute('d', `M${xo},${CY + 10} Q${cx},${CY + 2} ${xi},${CY + 8}`);
+  } else if (kind === 'arc') {
+    r.la.setAttribute('d', `M${xo},${CY + 16} Q${cx},${CY - 32} ${xi},${CY + 16}`);
+    spikes = `M${xo + dir * 3},${CY + 9} l${-dir * 12},${-5}`;
+  } else {
+    r.la.setAttribute('d', '');
+    r.gy.setAttribute('x', cx); r.gy.setAttribute('y', CY + 4);
+    r.gy.style.fontSize = t.glyphSize + 'px';
+    const g = (t.glyph || [])[side === 'L' ? 0 : 1] || '';
+    if (r.gy.textContent !== g) r.gy.textContent = g;
+  }
+  r.sp.setAttribute('d', spikes); r.tk.setAttribute('d', ticks);
+  const by = CY - 76 + t.browY;
+  const tilt = t.browAsym ? (side === 'L' ? t.browTilt : -t.browTilt) : t.browTilt;
+  r.br.setAttribute('d', `M${cx - dir * 46},${by + 6 - tilt * .3} Q${cx},${by - 9} ${cx + dir * 44},${by + tilt}`);
+}
+const MOUTHS = {
+  smile: () => ({ ink: 'M184,203 Q200,214 216,203' }),
+  big: () => ({ fill: 'M178,200 Q200,232 222,200 Q200,206 178,200Z', tongue: 'M190,213 Q200,207 210,213 Q200,219 190,213Z' }),
+  D: () => ({ fill: 'M170,196 Q200,248 230,196 Q200,203 170,196Z', tongue: 'M185,216 Q200,207 215,216 Q200,226 185,216Z' }),
+  o: () => ({ fill: 'M194,205 a6,7 0 1,0 12,0 a6,7 0 1,0 -12,0Z' }),
+  O: () => ({ fill: 'M190,206 a10,14 0 1,0 20,0 a10,14 0 1,0 -20,0Z' }),
+  frown: () => ({ ink: 'M184,212 Q200,200 216,212' }),
+  flat: () => ({ ink: 'M190,207 L210,207' }),
+  smirk: () => ({ ink: 'M186,208 Q204,213 218,199' }),
+  wavy: () => ({ ink: 'M178,206 q5.5,-6 11,0 t11,0 t11,0 t11,0' }),
+  squig: () => ({ ink: 'M180,208 l6.6,-5 l6.6,5 l6.6,-5 l6.6,5 l6.6,-5 l6.6,5' }),
+  cat: () => ({ ink: 'M180,201 q10,12 20,0 q10,12 20,0' }),
+  shark: () => ({ fill: 'M174,196 H226 Q222,228 200,228 Q178,228 174,196Z', teeth: 'M178,197 l4.8,8 l4.8,-8 l4.8,8 l4.8,-8 l4.8,8 l4.8,-8 l4.8,8 l4.8,-8 l4.8,8 l4.8,-8Z' }),
+  grimace: () => ({ grim: 'M182,200 h36 q5,0 5,5 v5 q0,5 -5,5 h-36 q-5,0 -5,-5 v-5 q0,-5 5,-5Z', teeth: 'M177,207.5 h46 M189,200 v15 M200,200 v15 M211,200 v15' }),
+  wavyOpen: () => ({ fill: 'M178,203 q5.5,-6 11,0 t11,0 t11,0 t11,0 Q200,226 178,203Z' }),
+  talk: o => {
+    const h = 4 + 26 * o;
+    return { fill: `M184,202 Q200,${202 + h * 1.5} 216,202 Q200,${202 - h * .25} 184,202Z`, tongue: h > 10 ? `M192,${202 + h * .55} Q200,${202 + h * .38} 208,${202 + h * .55} Q200,${202 + h * .72} 192,${202 + h * .55}Z` : '' };
+  }
+};
+const moEl = rigEl('mo'), mtEl = rigEl('mt'), mteEl = rigEl('mte'), blushEl = rigEl('blushG');
+function rigFrame(now){
+  const t = rigTarget();
+  for (const k of SPRING) {
+    const stiff = k === 'lookX' || k === 'lookY' ? .12 : k === 'mOpen' ? .5 : .22;
+    vel[k] = vel[k] * (calm ? 0 : .62) + (t[k] - cur[k]) * (calm ? 1 : stiff);
+    cur[k] += vel[k];
+  }
+  const p = { ...t, ...cur };
+  const bk = blinkK(now);
+  drawEye('L', p, Math.max(0, p.open * bk * (1 + Math.min(0, p.asym))));
+  drawEye('R', p, Math.max(0, p.open * bk * (1 - Math.max(0, p.asym))));
+  blushEl.setAttribute('opacity', Math.max(0, Math.min(1, p.blush)).toFixed(2));
+  const m = (MOUTHS[t.mouth] || MOUTHS.smile)(Math.max(0, p.mOpen));
+  moEl.setAttribute('class', m.ink ? 'mouthInk' : m.grim ? 'grim' : 'mouthFill');
+  moEl.setAttribute('d', m.ink || m.grim || m.fill || '');
+  mtEl.setAttribute('d', m.tongue || '');
+  mteEl.setAttribute('d', m.teeth || '');
+  requestAnimationFrame(rigFrame);
+}
+requestAnimationFrame(rigFrame);
+
 (function blinkLoop(){
-  if (!calm && !['sleep', 'happy', 'sad'].includes(eyes.state)) eyes.blink();
+  if (!calm && !['sleep', 'happy', 'sad'].includes(eyes.state)) {
+    eyes.blink();
+    if (Math.random() < .25) setTimeout(() => eyes.blink(), 260);
+  }
   setTimeout(blinkLoop, 2500 + Math.random() * 3500);
 })();
+function notice(){
+  if (calm) return;
+  face.classList.remove('notice'); void face.offsetWidth;
+  face.classList.add('notice');
+  clearTimeout(notice.t); notice.t = setTimeout(() => face.classList.remove('notice'), 900);
+}
 (function glanceLoop(){
   if (!calm && eyes.state === 'idle' && performance.now() - eyes.lastPointer > 2500)
     eyes.look(Math.round((Math.random() - .5) * 50), Math.round((Math.random() - .5) * 26));
@@ -458,6 +692,13 @@ const MOOD_RULES = [
   ['sad', /\b(sad|cry(ing)?|lonely|miss you)\b|เศร้า/i],
   ['cool', /\b(robot|cnc|arduino|3d print(er|ing)?)\b/i],
   ['shine', /\b(wow|amazing|awesome)\b/i],
+  ['celebrating', /\b(passed|we won|i won|congrat\w*|yay|finished my|got accepted)\b/i],
+  ['disappointed', /\b(failed|disappoint\w*|rejected|didn'?t pass)\b/i],
+  ['nervous', /\b(nervous|anxious|presentation tomorrow|scared of)\b/i],
+  ['embarrassed', /\b(embarrass\w*|awkward|oops)\b/i],
+  ['shy', /\b(shy|blush\w*)\b/i],
+  ['grumpy', /\b(annoy\w*|grumpy|ugh)\b/i],
+  ['suspicious', /\b(are you sure|really\?|suspicious|sus)\b/i],
   ['confused', /\?\?|\bhuh\b/i]
 ];
 const guessMood = q => (MOOD_RULES.find(([, re]) => re.test(q)) || [])[0] || '';
@@ -791,7 +1032,7 @@ const logVisit = (q, intent) => fetch(API + '/visit', {
 const PERSONA = 'You are Blink, a tiny, overly dramatic robot with two big glowing eyes who lives in a maker lab. You adore 3D printers, are secretly scared of the laser cutter, think you are a genius, and refer to humans as "my favorite carbon-based friends". Add one short quirky, funny remark to each answer, then give the real answer. Jokes must never replace or change the facts. Your replies are read aloud, so use plain sentences with no emojis, lists or markdown. ';
 const DOCS_TASK = 'If the file excerpts the user provides answer the question, answer from them and mention the source name in square brackets. If they do not, ignore the excerpts and answer from your general knowledge, starting with "(general knowledge)". Be short and clear. Always give a real answer.';
 const CHAT_TASK = 'Answer every question directly in 1 to 3 sentences using your general knowledge. Always give a real answer.';
-const MOOD_TASK = ' Start every reply with a mood tag in exactly this form: <mood>NAME</mood>, where NAME is one of: happy, love, shine, laughing, cool, teased, angry, scared, worried, stressed, sleepy, sad, confused. Use teased when the user is teasing, insulting or joking about you, and then answer with playful sass while staying kind.';
+const MOOD_TASK = ' Start every reply with a mood tag in exactly this form: <mood>NAME</mood>, where NAME is one of: ' + MOOD_NAMES.join(', ') + '. Pick the one that best fits your reply. Use teased when the user is teasing, insulting or joking about you, and then answer with playful sass while staying kind.';
 const sysPrompt = hasDocs => PERSONA + (hasDocs ? DOCS_TASK : CHAT_TASK) + MOOD_TASK;
 const NOPE = /not sure|don't know|do not know|can't help|cannot help/i;
 const clean = s => s.replace(/<think>[\s\S]*?(<\/think>|$)/g, '').replace(/\*\*/g, '').trim();
@@ -873,7 +1114,7 @@ async function ask(){
       const p = splitMood(out);
       if (p.mood && !moodSet) {
         moodSet = true;
-        if (p.mood === 'happy') eyes.clearMood(0); else eyes.mood(p.mood);
+        eyes.mood(p.mood);
       }
       bubble.textContent = p.text;
       eyes.pop();
@@ -953,7 +1194,7 @@ function startMic(greeting){
   rec.onstart = () => {
     listening = true; lastActive = Date.now();
     micBtn.classList.add('on'); micBtn.setAttribute('aria-pressed', 'true');
-    eyes.clearMood(0); eyes.set('listening'); status(greeting || 'Listening');
+    eyes.clearMood(0); eyes.set('listening'); notice(); status(greeting || 'Listening');
   };
   rec.onresult = e => {
     let text = '';
