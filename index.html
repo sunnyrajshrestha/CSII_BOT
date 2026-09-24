@@ -1044,10 +1044,15 @@ const sysPrompt = hasDocs => PERSONA + (hasDocs ? DOCS_TASK : CHAT_TASK) + MOOD_
 const NOPE = /not sure|don't know|do not know|can't help|cannot help/i;
 const clean = s => s.replace(/<think>[\s\S]*?(<\/think>|$)/g, '').replace(/\*\*/g, '').trim();
 const MOOD_RE = /^[<\[]\s*mood\s*[:>]\s*([a-z]+)\s*(?:<\/mood>|\])?\s*/i;
+const MOOD_TAG_RE = new RegExp('^[<\\[]\\s*(' + MOOD_NAMES.join('|') + ')\\s*[>\\]]\\s*', 'i');
 function splitMood(raw){
-  const t = clean(raw);
-  const m = t.match(MOOD_RE);
-  if (m && (/<\/|\]/.test(m[0]) || t.length > m[0].length)) return { mood: m[1].toLowerCase(), text: t.slice(m[0].length) };
+  let t = clean(raw);
+  const m = t.match(MOOD_RE) || t.match(MOOD_TAG_RE);
+  if (m && (/<\/|\]/.test(m[0]) || t.length > m[0].length)) {
+    const mood = m[1].toLowerCase();
+    t = t.slice(m[0].length).replace(new RegExp('<\\/\\s*(mood|' + mood + ')\\s*>\\s*$', 'i'), '').trim();
+    return { mood, text: t };
+  }
   if (/^[<\[]/.test(t) && t.length < 30) return { mood: null, text: '' };
   return { mood: null, text: t };
 }
