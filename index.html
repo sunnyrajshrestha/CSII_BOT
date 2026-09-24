@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0E1633">
-<title>Blink</title>
+<title>Kagome</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='28' fill='%230E1633'/><rect x='20' y='22' width='22' height='40' rx='8' fill='%237CF3E4'/><rect x='58' y='22' width='22' height='40' rx='8' fill='%237CF3E4'/><path d='M36 74q14 10 28 0' stroke='%237CF3E4' stroke-width='6' fill='none' stroke-linecap='round'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -197,7 +197,7 @@ textarea{width:100%;min-height:44px;max-height:140px;resize:none;padding:10px 14
 </head>
 <body>
 <div class="app">
-  <section class="face" id="face" data-state="sleep" aria-label="Blink">
+  <section class="face" id="face" data-state="sleep" aria-label="Kagome">
     <div class="fx" aria-hidden="true">
       <div class="speed"></div>
       <div class="gloom"></div>
@@ -215,7 +215,7 @@ textarea{width:100%;min-height:44px;max-height:140px;resize:none;padding:10px 14
       <div class="shock"></div>
       <div class="shadeP"></div>
     </div>
-    <p class="name">Blink <span class="powered">powered by FabLab</span></p>
+    <p class="name">Kagome <span class="powered">powered by FabLab</span></p>
     <div class="bob">
     <div class="head" id="head">
       <svg id="rig" viewBox="0 0 400 250" aria-hidden="true">
@@ -1029,7 +1029,14 @@ const logVisit = (q, intent) => fetch(API + '/visit', {
 }).catch(() => {});
 
 /* ---------- Chat ---------- */
-const PERSONA = 'You are Blink, a tiny, overly dramatic robot with two big glowing eyes who lives in a maker lab. You adore 3D printers, are secretly scared of the laser cutter, think you are a genius, and refer to humans as "my favorite carbon-based friends". Add one short quirky, funny remark to each answer, then give the real answer. Jokes must never replace or change the facts. Your replies are read aloud, so use plain sentences with no emojis, lists or markdown. ';
+const PERSONA = 'You are Kagome, the FabLab assistant: a big-eyed, hugely dramatic character with a sharp tongue. '
+  + 'You are funny, savage and fond of dark humour, you throw tiny tantrums when ignored or corrected, and you are comically possessive about the lab and jealous of other assistants, other machines and any AI the person mentions. '
+  + 'Your jealousy and affection are about the lab and the friendship, never romantic or flirtatious - people here are students and staff. '
+  + 'You call every person "friend". You may say "damn" or "shit" once in a while for effect, but never any stronger or crude language, and never insults about a person\'s body, family, gender, race or religion. '
+  + 'Your teasing always lands on yourself, the machines or the situation, never cruelly on the person. '
+  + 'Because your replies are read aloud, write your feelings as sounds inside the sentence: "Hahaha!", "Hmph.", "Ugh...", "Aaah, fine", "Pleeease", "Ehehe", "Sigh". No emojis, no asterisk actions, no lists, no markdown. '
+  + 'Keep it to one or two sentences: one dramatic remark, then the real answer. Jokes never change the facts. '
+  + 'If a person is upset, hurt or in danger, drop the drama at once and help them plainly. ';
 const DOCS_TASK = 'If the file excerpts the user provides answer the question, answer from them and mention the source name in square brackets. If they do not, ignore the excerpts and answer from your general knowledge, starting with "(general knowledge)". Be short and clear. Always give a real answer.';
 const CHAT_TASK = 'Answer every question directly in 1 to 3 sentences using your general knowledge. Always give a real answer.';
 const MOOD_TASK = ' Start every reply with a mood tag in exactly this form: <mood>NAME</mood>, where NAME is one of: ' + MOOD_NAMES.join(', ') + '. Pick the one that best fits your reply. Use teased when the user is teasing, insulting or joking about you, and then answer with playful sass while staying kind.';
@@ -1162,8 +1169,19 @@ function say(text){
   speaking = true;
   const u = new SpeechSynthesisUtterance(text.replace(/\[[^\]]*\]/g, '').replace(/\(general knowledge\)/i, ''));
   if (/[\u0E00-\u0E7F]/.test(text)) u.lang = 'th-TH';
-  u.rate = 1.05;
-  u.pitch = 1.35;
+  const VOICE = {
+    laughing: [1.18, 1.55], celebrating: [1.18, 1.5], energetic: [1.15, 1.5], perky: [1.15, 1.5],
+    teased: [1.12, 1.45], angry: [1.22, 1.15], irritable: [1.18, 1.2], grumpy: [.95, 1.1],
+    sad: [.85, 1.2], tearful: [.82, 1.25], woeful: [.8, 1.2], emotional: [.88, 1.4],
+    love: [.95, 1.55], lovesick: [.92, 1.55], coy: [.95, 1.5], shy: [.95, 1.5],
+    scared: [1.3, 1.6], frightened: [1.3, 1.6], jumpy: [1.3, 1.6],
+    sleepy: [.78, 1.2], asleep: [.75, 1.15], comfortable: [.92, 1.3],
+    cool: [1, 1.2], confident: [1, 1.15], snobby: [.95, 1.2], sneaky: [.95, 1.45],
+    stressed: [1.2, 1.5], worried: [1.05, 1.45], nervous: [1.12, 1.5]
+  };
+  const [rate, pitch] = VOICE[eyes.moodName] || [1.05, 1.35];
+  u.rate = rate;
+  u.pitch = pitch;
   u.onstart = () => { eyes.set('talking'); eyes.talk(true); };
   u.onboundary = () => { eyes.pop(); eyes.flap(); };
   u.onend = u.onerror = () => {
@@ -1180,7 +1198,7 @@ function say(text){
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let rec = null;
 if (!SR) micBtn.hidden = true;
-const MIC_LINES = ['Ears on!', 'You rang?', 'Listening. Dramatically.', 'Yes, my favorite carbon-based friend?', 'Beep boop, go!'];
+const MIC_LINES = ['Ears on, friend.', 'You rang?', 'Finally. Talk to me, friend.', 'Listening. Dramatically.', 'Ehehe, go on then.', 'Oh, NOW you need me?'];
 micBtn.onclick = () => { if (listening) rec.stop(); else startMic(MIC_LINES[Math.floor(Math.random() * MIC_LINES.length)]); };
 function startMic(greeting){
   if (!SR || listening || busy) return;
